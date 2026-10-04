@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SunSynk & Sonoff Home Energy Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --surface: #111726;
+      --surface-elevated: #182238;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(255, 255, 255, 0.16);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --solar: #f59e0b;
+      --battery: #10b981;
+      --grid: #8b5cf6;
+      --load: #38bdf8;
+      --geyser: #ef4444;
+      --pool: #06b6d4;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: rgba(17, 23, 38, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: white;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .harness-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #34d399;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.6; }
+    }
+
+    main {
+      padding: 2rem;
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* Grid Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.5rem;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--border-accent);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .stat-val {
+      font-size: 2.2rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .stat-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    /* Power Flow Card */
+    .power-flow-banner {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      background: linear-gradient(180deg, rgba(24, 34, 56, 0.7), rgba(17, 23, 38, 0.9));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .power-flow-banner {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 500px) {
+      .power-flow-banner {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .flow-node {
+      background: rgba(9, 13, 22, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .flow-node.solar { border-top: 4px solid var(--solar); }
+    .flow-node.battery { border-top: 4px solid var(--battery); }
+    .flow-node.load { border-top: 4px solid var(--load); }
+    .flow-node.grid { border-top: 4px solid var(--grid); }
+
+    /* Geyser Gauge */
+    .geyser-gauge-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 1rem 0;
+    }
+
+    .temp-circle {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 6px solid var(--surface-elevated);
+      border-top-color: var(--geyser);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .temp-deg {
+      font-size: 2.2rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .temp-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Switch toggle */
+    .switch-btn {
+      width: 100%;
+      padding: 0.85rem;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .switch-btn.on {
+      background: #ef4444;
+      color: white;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    }
+
+    .switch-btn.off {
+      background: var(--surface-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .switch-btn.pool-on {
+      background: var(--pool);
+      color: white;
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+    }
+
+    /* System Mode Editor */
+    .system-mode-card {
+      grid-column: 1 / -1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.75rem;
+    }
+
+    .tou-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .tou-table th, .tou-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tou-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .table-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.4rem 0.6rem;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      width: 90px;
+    }
+
+    .btn-apply {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 1.25rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-apply:hover {
+      filter: brightness(1.1);
+    }
+
+    .badge-status {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-status.active {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+
+    /* Chart Card */
+    .chart-container {
+      position: relative;
+      height: 280px;
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      background: #10b981;
+      color: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-title">Energy Conductor</div>
+        <div class="brand-subtitle">SunSynk 8kW + Sonoff Wi-Fi Controller</div>
+      </div>
+    </div>
+    <div class="harness-badge" id="host-badge">
+      <div class="pulse-dot"></div>
+      <span id="host-text">Laptop Emulation</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Live Flow Banner -->
+    <div class="power-flow-banner">
+      <div class="flow-node solar">
+        <div class="card-title">☀️ Solar Generation</div>
+        <div class="stat-val" id="solar-watts" style="color: var(--solar)">-- W</div>
+        <div class="stat-sub" id="solar-daily">Today: -- kWh</div>
+      </div>
+      <div class="flow-node battery">
+        <div class="card-title">🔋 Battery Storage</div>
+        <div class="stat-val" id="batt-soc" style="color: var(--battery)">-- %</div>
+        <div class="stat-sub" id="batt-power">Flow: -- W</div>
+      </div>
+      <div class="flow-node load">
+        <div class="card-title">🏠 Essential Load</div>
+        <div class="stat-val" id="load-watts" style="color: var(--load)">-- W</div>
+        <div class="stat-sub" id="load-daily">Today: -- kWh</div>
+      </div>
+      <div class="flow-node grid">
+        <div class="card-title">🌐 Grid Connection</div>
+        <div class="stat-val" id="grid-watts" style="color: var(--grid)">-- W</div>
+        <div class="stat-sub" id="grid-daily">Today: -- kWh</div>
+      </div>
+    </div>
+
+    <!-- Middle Row: Geyser, Pool Pump, DB Backup -->
+    <div class="dashboard-grid">
+      <!-- Geyser Controller Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">♨️ Main Geyser (Sonoff)</div>
+          <span class="badge-status active" id="geyser-badge">STANDBY</span>
+        </div>
+        <div class="geyser-gauge-wrap">
+          <div class="temp-circle" id="geyser-circle">
+            <span class="temp-deg" id="geyser-temp">--°</span>
+            <span class="temp-label">Water Temp</span>
+          </div>
+          <div class="stat-sub" id="geyser-power-readout">Draw: -- W (230V)</div>
+        </div>
+        <div style="margin: 1rem 0;">
+          <label style="font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+            <span>Target Temperature:</span>
+            <strong id="target-temp-label" style="color: var(--text)">55°C</strong>
+          </label>
+          <input type="range" min="40" max="65" value="55" step="1" id="target-temp-slider" style="width: 100%; margin-top: 0.5rem;">
+        </div>
+        <button class="switch-btn off" id="geyser-toggle-btn" onclick="toggleSwitch('geyser')">
+          Toggle Geyser Power
+        </button>
+      </div>
+
+      <!-- DB Switch 1: Pool Pump -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🏊 Pool Pump (DB Switch)</div>
+          <span class="badge-status active" id="pool-badge">STANDBY</span>
+        </div>
+        <div style="padding: 1.5rem 0;">
+          <div class="stat-val" id="pool-watts" style="color: var(--pool)">-- W</div>
+          <div class="stat-sub">Rated Load: 1100 W (Inductive Contactor)</div>
+          <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
+            Direct Wi-Fi relay control. Safe contactor switching avoids contact welding.
+          </p>
+        </div>
+        <button class="switch-btn off" id="pool-toggle-btn" onclick="toggleSwitch('pool_pump')">
+          Toggle Pool Pump
+        </button>
+      </div>
+
+      <!-- DB Switch 2: Auxiliary / Backup -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">⚡ Geyser Backup (DB Switch)</div>
+          <span class="badge-status active" id="backup-badge">STANDBY</span>
+        </div>
+        <div style="padding: 1.5rem 0;">
+          <div class="stat-val" id="backup-watts" style="color: #a78bfa">-- W</div>
+          <div class="stat-sub">Secondary Isolation / Backup Feed</div>
+          <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
+            Independent DB line for manual or bypass energy routing.
+          </p>
+        </div>
+        <button class="switch-btn off" id="backup-toggle-btn" onclick="toggleSwitch('geyser_backup')">
+          Toggle Backup DB Switch
+        </button>
+      </div>
+    </div>
+
+    <!-- SunSynk System Mode Control -->
+    <div class="system-mode-card">
+      <div class="card-header">
+        <div>
+          <div class="card-title" style="color: #f1f5f9; font-size: 1.1rem;">⚙️ SunSynk System Mode & Parameters</div>
+          <div class="stat-sub">Read and program inverter operating modes, battery cutoffs, and Time of Use (TOU) slots</div>
+        </div>
+        <span class="badge-status active" id="inverter-source-badge">ONLINE</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem;">
+        <div>
+          <label style="font-size: 0.8rem; color: var(--text-muted);">Work Mode</label>
+          <select id="work-mode-select" class="table-input" style="width: 100%; margin-top: 0.3rem;">
+            <option value="2">Zero Export to CT</option>
+            <option value="1">Zero Export to Load</option>
+            <option value="0">Selling First</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; color: var(--text-muted);">Priority Priority</label>
+          <select id="priority-select" class="table-input" style="width: 100%; margin-top: 0.3rem;">
+            <option value="1">Load First</option>
+            <option value="0">Battery First</option>
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; color: var(--text-muted);">Battery Shutdown SOC (%)</label>
+          <input type="number" id="batt-shutdown-input" class="table-input" style="width: 100%; margin-top: 0.3rem;" value="15">
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; color: var(--text-muted);">Battery Low SOC (%)</label>
+          <input type="number" id="batt-low-input" class="table-input" style="width: 100%; margin-top: 0.3rem;" value="20">
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; color: var(--text-muted);">Battery Restart SOC (%)</label>
+          <input type="number" id="batt-restart-input" class="table-input" style="width: 100%; margin-top: 0.3rem;" value="35">
+        </div>
+      </div>
+
+      <!-- TOU Slots Table -->
+      <h4 style="margin-top: 1.5rem; font-size: 0.95rem; color: var(--text-muted);">Time of Use (TOU) 6-Slot Matrix</h4>
+      <div style="overflow-x: auto;">
+        <table class="tou-table">
+          <thead>
+            <tr>
+              <th>Slot</th>
+              <th>Time (HH:MM)</th>
+              <th>Max Power (W)</th>
+              <th>Target SOC (%)</th>
+              <th>Grid Charge</th>
+            </tr>
+          </thead>
+          <tbody id="tou-tbody">
+            <!-- Dynamic TOU rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <button class="btn-apply" onclick="saveSystemMode()">
+        💾 Apply Parameters to SunSynk Inverter
+      </button>
+    </div>
+
+    <!-- Historical Telemetry Graphs -->
+    <div class="dashboard-grid">
+      <div class="card" style="grid-column: span 2;">
+        <div class="card-header">
+          <div class="card-title">📈 Live Telemetry History (Solar vs Load)</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="energyChart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">♨️ Geyser Temperature Trend</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="tempChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast">Settings updated successfully!</div>
+
+  <script>
+    let energyChart = null;
+    let tempChart = null;
+    let currentGeyserState = 'off';
+    let currentPoolState = 'off';
+    let currentBackupState = 'off';
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    async function fetchState() {
+      try {
+        const res = await fetch('/api/state');
+        if (!res.ok) return;
+        const data = await res.json();
+        updateUI(data);
+      } catch (err) {
+        console.error('State poll failed', err);
+      }
+    }
+
+    function updateUI(data) {
+      const s = data.solar || {};
+      const b = s.battery || {};
+      const g = s.grid || {};
+      const l = s.load || {};
+      const sonoff = data.sonoff || {};
+      const geyser = sonoff.geyser || {};
+      const pool = sonoff.pool_pump || {};
+      const backup = sonoff.geyser_backup || {};
+      const harness = data.system_harness || {};
+
+      // Host Harness
+      document.getElementById('host-text').innerText = harness.host_mode || 'Laptop Emulation';
+
+      // Solar
+      document.getElementById('solar-watts').innerText = `${s.solar?.total_watts ?? 0} W`;
+      document.getElementById('solar-daily').innerText = `Today: ${s.solar?.daily_kwh ?? 0} kWh`;
+
+      // Battery
+      document.getElementById('batt-soc').innerText = `${b.soc_percent ?? 0} %`;
+      const bWatts = b.watts ?? 0;
+      document.getElementById('batt-power').innerText = bWatts >= 0 ? `Charging: +${bWatts} W` : `Discharging: ${bWatts} W`;
+
+      // Load & Grid
+      document.getElementById('load-watts').innerText = `${l.total_watts ?? 0} W`;
+      document.getElementById('load-daily').innerText = `Today: ${l.daily_kwh ?? 0} kWh`;
+      
+      const gWatts = g.watts ?? 0;
+      document.getElementById('grid-watts').innerText = `${gWatts} W`;
+      document.getElementById('grid-daily').innerText = `Today: ${g.daily_import_kwh ?? 0} kWh`;
+
+      // Geyser
+      document.getElementById('geyser-temp').innerText = `${geyser.temperature_c ? geyser.temperature_c.toFixed(1) : '--'}°`;
+      document.getElementById('geyser-power-readout').innerText = `Draw: ${geyser.power_watts ?? 0} W (230V)`;
+      currentGeyserState = geyser.state;
+      const gBtn = document.getElementById('geyser-toggle-btn');
+      gBtn.className = `switch-btn ${geyser.state === 'on' ? 'on' : 'off'}`;
+      gBtn.innerText = geyser.state === 'on' ? '🔥 Geyser ON (Click to Stop)' : '⚡ Geyser OFF (Click to Heat)';
+      document.getElementById('geyser-badge').innerText = geyser.state === 'on' ? 'HEATING' : 'STANDBY';
+
+      // Pool Pump
+      currentPoolState = pool.state;
+      const pBtn = document.getElementById('pool-toggle-btn');
+      pBtn.className = `switch-btn ${pool.state === 'on' ? 'pool-on' : 'off'}`;
+      pBtn.innerText = pool.state === 'on' ? '💧 Pool Pump RUNNING' : '⏹️ Pool Pump OFF';
+      document.getElementById('pool-watts').innerText = `${pool.power_watts ?? 0} W`;
+      document.getElementById('pool-badge').innerText = pool.state === 'on' ? 'RUNNING' : 'STANDBY';
+
+      // Geyser Backup
+      currentBackupState = backup.state;
+      const bBtn = document.getElementById('backup-toggle-btn');
+      bBtn.className = `switch-btn ${backup.state === 'on' ? 'on' : 'off'}`;
+      bBtn.innerText = backup.state === 'on' ? '⚡ Backup Feed ACTIVE' : '⏹️ Backup Feed ISOLATED';
+      document.getElementById('backup-watts').innerText = `${backup.power_watts ?? 0} W`;
+      document.getElementById('backup-badge').innerText = backup.state === 'on' ? 'ACTIVE' : 'ISOLATED';
+    }
+
+    async function toggleSwitch(deviceKey) {
+      let nextState = 'on';
+      if (deviceKey === 'geyser' && currentGeyserState === 'on') nextState = 'off';
+      if (deviceKey === 'pool_pump' && currentPoolState === 'on') nextState = 'off';
+      if (deviceKey === 'geyser_backup' && currentBackupState === 'on') nextState = 'off';
+
+      try {
+        const res = await fetch(`/api/switch/${deviceKey}`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({state: nextState})
+        });
+        if (res.ok) {
+          showToast(`Switched ${deviceKey} ${nextState.toUpperCase()}`);
+          fetchState();
+        }
+      } catch (e) {
+        showToast(`Failed to toggle ${deviceKey}`);
+      }
+    }
+
+    // Target Temperature Slider
+    const tempSlider = document.getElementById('target-temp-slider');
+    tempSlider.addEventListener('change', async (e) => {
+      const val = parseFloat(e.target.value);
+      document.getElementById('target-temp-label').innerText = `${val}°C`;
+      try {
+        await fetch('/api/geyser/temp', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({target_temp_c: val})
+        });
+        showToast(`Target Geyser temp set to ${val}°C`);
+      } catch (err) {}
+    });
+
+    async function loadSystemMode() {
+      try {
+        const res = await fetch('/api/system_mode');
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        document.getElementById('work-mode-select').value = data.work_mode ?? 2;
+        document.getElementById('priority-select').value = data.priority ?? 1;
+        document.getElementById('batt-shutdown-input').value = data.battery_shutdown_soc ?? 15;
+        document.getElementById('batt-low-input').value = data.battery_low_soc ?? 20;
+        document.getElementById('batt-restart-input').value = data.battery_restart_soc ?? 35;
+
+        const tbody = document.getElementById('tou-tbody');
+        tbody.innerHTML = '';
+        (data.tou_slots || []).forEach((slot, i) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>Slot ${slot.slot}</td>
+            <td><input type="text" class="table-input" id="tou-time-${i}" value="${slot.time}"></td>
+            <td><input type="number" class="table-input" id="tou-power-${i}" value="${slot.power}"></td>
+            <td><input type="number" class="table-input" id="tou-soc-${i}" value="${slot.soc}"></td>
+            <td><input type="checkbox" id="tou-gc-${i}" ${slot.grid_charge ? 'checked' : ''}></td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (e) {
+        console.error('Failed to load system mode', e);
+      }
+    }
+
+    async function saveSystemMode() {
+      const payload = {
+        work_mode: parseInt(document.getElementById('work-mode-select').value),
+        priority: parseInt(document.getElementById('priority-select').value),
+        battery_shutdown_soc: parseInt(document.getElementById('batt-shutdown-input').value),
+        battery_low_soc: parseInt(document.getElementById('batt-low-input').value),
+        battery_restart_soc: parseInt(document.getElementById('batt-restart-input').value),
+        tou_slots: []
+      };
+
+      for (let i = 0; i < 6; i++) {
+        const tEl = document.getElementById(`tou-time-${i}`);
+        if (tEl) {
+          payload.tou_slots.push({
+            slot: i + 1,
+            time: tEl.value,
+            power: parseInt(document.getElementById(`tou-power-${i}`).value),
+            soc: parseInt(document.getElementById(`tou-soc-${i}`).value),
+            grid_charge: document.getElementById(`tou-gc-${i}`).checked
+          });
+        }
+      }
+
+      try {
+        const res = await fetch('/api/system_mode', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          showToast('SunSynk System Mode parameters successfully updated!');
+        } else {
+          showToast('Failed to apply settings to inverter.');
+        }
+      } catch (e) {
+        showToast('Error communicating with system server.');
+      }
+    }
+
+    async function initCharts() {
+      const ctxEnergy = document.getElementById('energyChart').getContext('2d');
+      energyChart = new Chart(ctxEnergy, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            { label: 'Solar Generation (W)', borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', data: [], tension: 0.3, fill: true },
+            { label: 'House Load (W)', borderColor: '#38bdf8', data: [], tension: 0.3 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8' } } },
+          scales: {
+            x: { ticks: { color: '#64748b' } },
+            y: { ticks: { color: '#64748b' } }
+          }
+        }
+      });
+
+      const ctxTemp = document.getElementById('tempChart').getContext('2d');
+      tempChart = new Chart(ctxTemp, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            { label: 'Geyser Temp (°C)', borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', data: [], tension: 0.3, fill: true }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#94a3b8' } } },
+          scales: {
+            x: { ticks: { color: '#64748b' } },
+            y: { ticks: { color: '#64748b' }, min: 30, max: 70 }
+          }
+        }
+      });
+    }
+
+    async function updateCharts() {
+      try {
+        const res = await fetch('/api/history?limit=30');
+        if (!res.ok) return;
+        const data = await res.json();
+        const hist = data.history || [];
+
+        const labels = hist.map(h => {
+          const d = new Date(h.timestamp * 1000);
+          return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+        });
+
+        if (energyChart) {
+          energyChart.data.labels = labels;
+          energyChart.data.datasets[0].data = hist.map(h => h.solar_watts);
+          energyChart.data.datasets[1].data = hist.map(h => h.load_watts);
+          energyChart.update();
+        }
+
+        if (tempChart) {
+          tempChart.data.labels = labels;
+          tempChart.data.datasets[0].data = hist.map(h => h.geyser_temp);
+          tempChart.update();
+        }
+      } catch (e) {}
+    }
+
+    window.onload = async () => {
+      await initCharts();
+      await loadSystemMode();
+      await fetchState();
+      await updateCharts();
+      setInterval(fetchState, 3000);
+      setInterval(updateCharts, 6000);
+    };
+  </script>
+</body>
+</html>

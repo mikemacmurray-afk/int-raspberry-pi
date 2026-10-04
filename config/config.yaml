@@ -1,0 +1,55 @@
+# Home Energy Management System (Raspberry Pi 5 / Laptop Runtime)
+# Designed for SunSynk 8kW Inverter + Sonoff Geyser & DB Switches over Wi-Fi
+
+system:
+  mode: "auto"              # "auto" (tries real devices, falls back to mock if unreachable), "real", or "mock"
+  poll_interval_sec: 3       # Telemetry poll rate in seconds
+  db_path: "data/energy_history.db"
+
+# SunSynk 8kW Hybrid Inverter (Connected via Wi-Fi Dongle)
+sunsynk:
+  enabled: true
+  host: "192.168.1.60"       # Local IP address of your SunSynk / Solarman Wi-Fi stick
+  port: 8899                 # Default Solarman V5 port (8899)
+  protocol: "tcp"            # "tcp" or "udp"
+  serial_number: 2300000000  # 10 or 12-digit Serial Number printed on the Wi-Fi stick
+  slave_id: 1                # Inverter Modbus Slave ID (default is 1)
+  timeout_sec: 4.0
+
+# Sonoff Smart Geyser Controller (e.g., Sonoff TH Elite / Origin / POW Elite with temp probe)
+sonoff_geyser:
+  enabled: true
+  name: "Main Geyser"
+  host: "192.168.1.70"       # Local IP of the Geyser Sonoff unit
+  port: 8081                 # Standard eWeLink LAN port
+  device_id: "1000xxxx01"    # Sonoff Device ID (from eWeLink app or discovered automatically)
+  api_key: ""                # Device local key (leave empty if DIY mode or discovered via Zeroconf)
+  has_temp_sensor: true
+  target_temp_c: 55.0        # Default target temperature
+  max_cutoff_temp_c: 65.0    # Safety cutoff temperature
+  min_temp_c: 45.0           # Minimum comfort threshold
+
+# DB Smart Switch 1: Pool Pump
+sonoff_pool_pump:
+  enabled: true
+  name: "Pool Pump"
+  host: "192.168.1.71"
+  port: 8081
+  device_id: "1000xxxx02"
+  api_key: ""
+  rated_watts: 1100          # Approximate power draw for load planning
+
+# DB Smart Switch 2: Geyser Backup / Auxiliary DB Switch
+sonoff_geyser_backup:
+  enabled: true
+  name: "Geyser Backup DB Switch"
+  host: "192.168.1.72"
+  port: 8081
+  device_id: "1000xxxx03"
+  api_key: ""
+  rated_watts: 3000
+
+# Web Dashboard & API Server
+web:
+  host: "0.0.0.0"
+  port: 8000
