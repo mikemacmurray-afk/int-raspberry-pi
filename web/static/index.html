@@ -45,7 +45,7 @@
       background: rgba(17, 23, 38, 0.85);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
+      padding: 0.65rem 1.25rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -61,15 +61,15 @@
     }
 
     .brand-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
       background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
       border: 1px solid rgba(56, 189, 248, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.15);
       transition: all 0.25s ease;
       flex-shrink: 0;
     }
@@ -81,35 +81,35 @@
     }
 
     .brand-title {
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: 800;
       letter-spacing: -0.02em;
       color: #ffffff;
     }
 
     .brand-subtitle {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
       font-weight: 500;
-      margin-top: 2px;
+      margin-top: 1px;
     }
 
     .harness-badge {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.35rem 0.85rem;
+      gap: 0.4rem;
+      padding: 0.3rem 0.75rem;
       background: rgba(16, 185, 129, 0.12);
       border: 1px solid rgba(16, 185, 129, 0.3);
       border-radius: 20px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 600;
       color: #34d399;
     }
 
     .pulse-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: #10b981;
       box-shadow: 0 0 8px #10b981;
@@ -122,27 +122,33 @@
     }
 
     main {
-      padding: 2rem;
-      max-width: 1440px;
+      padding: 0.85rem 1.25rem;
+      max-width: 1360px;
       margin: 0 auto;
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 0.85rem;
     }
 
-    /* Grid Layout */
+    /* Grid Layout: 3 Columns in Landscape */
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    @media (max-width: 992px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      }
     }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 1.5rem;
+      border-radius: 16px;
+      padding: 1.15rem;
       position: relative;
       transition: transform 0.2s, border-color 0.2s;
     }
@@ -155,11 +161,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.25rem;
+      margin-bottom: 1rem;
     }
 
     .card-title {
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
@@ -170,7 +176,7 @@
     }
 
     .stat-val {
-      font-size: 2.2rem;
+      font-size: 1.85rem;
       font-weight: 800;
       font-family: 'JetBrains Mono', monospace;
       letter-spacing: -0.03em;
@@ -178,94 +184,89 @@
     }
 
     .stat-sub {
-      font-size: 0.82rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
-      margin-top: 0.35rem;
+      margin-top: 0.25rem;
     }
 
-    /* Power Flow Card */
+    /* Power Flow HUD Banner (5-wide in landscape) */
     .power-flow-banner {
       grid-column: 1 / -1;
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 1.25rem;
+      gap: 0.75rem;
       background: linear-gradient(180deg, rgba(24, 34, 56, 0.7), rgba(17, 23, 38, 0.9));
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
-      padding: 1.5rem;
+      border-radius: 16px;
+      padding: 0.75rem 0.9rem;
     }
 
-    @media (max-width: 1280px) {
+    @media (max-width: 900px) {
       .power-flow-banner {
         grid-template-columns: repeat(3, 1fr);
       }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 600px) {
       .power-flow-banner {
         grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 500px) {
-      .power-flow-banner {
-        grid-template-columns: 1fr;
       }
     }
 
     .flow-node {
       background: rgba(9, 13, 22, 0.6);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.25rem;
+      border-radius: 12px;
+      padding: 0.65rem 0.85rem;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.25rem;
     }
 
-    .flow-node.solar { border-top: 4px solid var(--solar); }
-    .flow-node.battery { border-top: 4px solid var(--battery); }
-    .flow-node.batt-power { border-top: 4px solid #10b981; }
-    .flow-node.load { border-top: 4px solid var(--load); }
-    .flow-node.grid { border-top: 4px solid var(--grid); }
+    .flow-node.solar { border-top: 3px solid var(--solar); }
+    .flow-node.battery { border-top: 3px solid var(--battery); }
+    .flow-node.batt-power { border-top: 3px solid #10b981; }
+    .flow-node.load { border-top: 3px solid var(--load); }
+    .flow-node.grid { border-top: 3px solid var(--grid); }
 
-    /* Geyser Gauge */
+    /* Compact Geyser Gauge for 720p height */
     .geyser-gauge-wrap {
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      padding: 1rem 0;
+      padding: 0.35rem 0;
     }
 
     .temp-circle {
-      width: 140px;
-      height: 140px;
+      width: 120px;
+      height: 120px;
       border-radius: 50%;
-      border: 6px solid var(--surface-elevated);
+      border: 5px solid var(--surface-elevated);
       border-top-color: var(--geyser);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      margin-bottom: 1rem;
+      margin-bottom: 0.45rem;
       position: relative;
     }
 
     .temp-deg {
-      font-size: 2.2rem;
+      font-size: 1.95rem;
       font-weight: 800;
       font-family: 'JetBrains Mono', monospace;
     }
 
     .temp-label {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: var(--text-muted);
     }
 
     /* Switch toggle */
     .switch-btn {
       width: 100%;
+      min-height: 48px;
       padding: 0.85rem;
       border-radius: 12px;
       border: none;
@@ -277,6 +278,12 @@
       justify-content: center;
       gap: 0.5rem;
       transition: all 0.2s;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .switch-btn:active {
+      transform: scale(0.97);
     }
 
     .switch-btn.on {
@@ -603,6 +610,9 @@
       </a>
       <button onclick="reloadConfig()" title="Reload config.yaml without restarting the server" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; background: rgba(255, 255, 255, 0.07); border: 1px solid var(--border); border-radius: 20px; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.07)'; this.style.color='var(--text-muted)';">
         🔄 Reload Config
+      </button>
+      <button onclick="toggleFullscreen()" id="fs-btn" title="Toggle Fullscreen Mode" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; background: rgba(255, 255, 255, 0.07); border: 1px solid var(--border); border-radius: 20px; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.07)'; this.style.color='var(--text-muted)';">
+        ⛶ Fullscreen
       </button>
       <div class="harness-badge" id="host-badge">
         <div class="pulse-dot"></div>
@@ -1719,6 +1729,25 @@
         });
       }
     }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn('Error attempting to enable fullscreen:', err.message);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      const btn = document.getElementById('fs-btn');
+      if (btn) {
+        btn.innerHTML = document.fullscreenElement ? '🗗 Exit Fullscreen' : '⛶ Fullscreen';
+      }
+    });
 
     window.onload = async () => {
       await initCharts();
