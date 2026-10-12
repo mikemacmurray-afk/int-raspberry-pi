@@ -6,50 +6,74 @@ system:
   poll_interval_sec: 3       # Telemetry poll rate in seconds
   db_path: "data/energy_history.db"
 
-# SunSynk 8kW Hybrid Inverter (Connected via Wi-Fi Dongle)
+# SunSynk 8kW Hybrid Inverter (Cloud API or Local Wi-Fi Dongle)
 sunsynk:
   enabled: true
-  host: "192.168.1.60"       # Local IP address of your SunSynk / Solarman Wi-Fi stick
-  port: 8899                 # Default Solarman V5 port (8899)
-  protocol: "tcp"            # "tcp" or "udp"
-  serial_number: 2300000000  # 10 or 12-digit Serial Number printed on the Wi-Fi stick
-  slave_id: 1                # Inverter Modbus Slave ID (default is 1)
+  connection_type: "cloud"    # "cloud" (Sunsynk Connect API) or "solarman" (Port 8899 local)
+  # Sunsynk Connect API credentials (from Sunsynk app / website)
+  username: "mikem@investiture.co.za"                # Enter your Sunsynk Connect email/username here
+  password: "M4n4g3r$"                # Enter your Sunsynk Connect password here
+  inverter_sn: "2211039614"             # Optional: inverter serial number (auto-discovered if left blank)
+  # Local E-Linter / Solarman Wi-Fi Logger settings (for diagnostic tools)
+  host: "192.168.3.4"         # Local IP of your inverter Wi-Fi stick
+  port: 8899
+  protocol: "tcp"
+  serial_number: 2300000000
+  slave_id: 1
   timeout_sec: 4.0
 
-# Sonoff Smart Geyser Controller (e.g., Sonoff TH Elite / Origin / POW Elite with temp probe)
+# eWeLink Cloud Account (for device sync and remote control)
+ewelink:
+  username: "mikem@investiture.co.za"
+  password: "M4n4g3r$"
+  region: "eu"
+
+# Sonoff Smart Geyser Controller (Sonoff TH Elite / Origin with temp probe)
 sonoff_geyser:
   enabled: true
-  name: "Main Geyser"
-  host: "192.168.1.70"       # Local IP of the Geyser Sonoff unit
+  name: "Geyser Thermi"
+  host: "192.168.3.7"        # Local IP of the Geyser Sonoff unit
   port: 8081                 # Standard eWeLink LAN port
-  device_id: "1000xxxx01"    # Sonoff Device ID (from eWeLink app or discovered automatically)
-  api_key: ""                # Device local key (leave empty if DIY mode or discovered via Zeroconf)
+  device_id: "1001f71cc1"    # Sonoff Device ID
+  api_key: "44bfb01c-73ee-483f-a781-8836e33455e3" # Device local key (AES-128 LAN decryption)
   has_temp_sensor: true
   target_temp_c: 55.0        # Default target temperature
   max_cutoff_temp_c: 65.0    # Safety cutoff temperature
   min_temp_c: 45.0           # Minimum comfort threshold
+  rated_watts: 3000
 
-# DB Smart Switch 1: Pool Pump
+# DB Smart Switch 1: Pool Pump (CBI Astute / Tuya DIN-Rail Switch)
 sonoff_pool_pump:
+  driver: "tuya"
   enabled: true
   name: "Pool Pump"
-  host: "192.168.1.71"
-  port: 8081
-  device_id: "1000xxxx02"
-  api_key: ""
-  rated_watts: 1100          # Approximate power draw for load planning
+  host: "192.168.3.58"       # Tuya DIN-rail switch on LAN
+  device_id: "bf1f1c9a5b5c58bb43higw"
+  local_key: "K!JiP`7E;KjrK_'M"
+  version: 3.5
+  rated_watts: 1100          # Inductive pool pump rating
 
-# DB Smart Switch 2: Geyser Backup / Auxiliary DB Switch
+# DB Smart Switch 2: Geyser Backup / Auxiliary DB Switch (CBI Astute / Tuya DIN-Rail Switch)
 sonoff_geyser_backup:
+  driver: "tuya"
   enabled: true
   name: "Geyser Backup DB Switch"
-  host: "192.168.1.72"
-  port: 8081
-  device_id: "1000xxxx03"
-  api_key: ""
+  host: "192.168.3.2"        # Tuya DIN-rail switch on LAN
+  device_id: "bf2efe8bc0bbaa6963zpde"
+  local_key: "Q45(*p*WalW#N+V0"
+  version: 3.4
   rated_watts: 3000
+
+# RainPoint Smart+ / HomGar Cloud (Pool Thermometer & Wi-Fi Gateway)
+rainpoint:
+  enabled: true
+  email: "mikem@investiture.co.za"
+  password: "M4n4g3r$"
+  area_code: "27"
+  app_code: "2"
+  base_url: "https://region3.homgarus.com"
 
 # Web Dashboard & API Server
 web:
   host: "0.0.0.0"
-  port: 8000
+  port: 8050

@@ -13,6 +13,13 @@ import ipaddress
 import sys
 from pathlib import Path
 
+# Force UTF-8 on Windows consoles to prevent cp1252 charmap errors
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 def get_local_ip() -> str:
     """Detect local IP address of laptop."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

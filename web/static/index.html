@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SunSynk & Sonoff Home Energy Manager</title>
+  <title>15 Cranleigh - Home Management System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -61,28 +61,37 @@
     }
 
     .brand-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(56, 189, 248, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 800;
-      font-size: 1.1rem;
-      color: white;
-      box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      transition: all 0.25s ease;
+      flex-shrink: 0;
+    }
+
+    .brand-icon:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.45);
+      transform: translateY(-1px);
     }
 
     .brand-title {
-      font-size: 1.15rem;
-      font-weight: 700;
+      font-size: 1.25rem;
+      font-weight: 800;
       letter-spacing: -0.02em;
+      color: #ffffff;
     }
 
     .brand-subtitle {
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 2px;
     }
 
     .harness-badge {
@@ -178,7 +187,7 @@
     .power-flow-banner {
       grid-column: 1 / -1;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 1.25rem;
       background: linear-gradient(180deg, rgba(24, 34, 56, 0.7), rgba(17, 23, 38, 0.9));
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -186,7 +195,13 @@
       padding: 1.5rem;
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1280px) {
+      .power-flow-banner {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
       .power-flow-banner {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -210,6 +225,7 @@
 
     .flow-node.solar { border-top: 4px solid var(--solar); }
     .flow-node.battery { border-top: 4px solid var(--battery); }
+    .flow-node.batt-power { border-top: 4px solid #10b981; }
     .flow-node.load { border-top: 4px solid var(--load); }
     .flow-node.grid { border-top: 4px solid var(--grid); }
 
@@ -281,13 +297,64 @@
       box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
     }
 
-    /* System Mode Editor */
+    /* System Mode Editor & Tabs */
     .system-mode-card {
       grid-column: 1 / -1;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 1.75rem;
+    }
+
+    .card-tabs-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.92rem;
+      padding: 0.65rem 1.25rem;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: var(--surface-elevated);
+      border-color: #3b82f6;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.25);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: tabFadeIn 0.2s ease-in-out;
+    }
+
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .tou-table {
@@ -373,9 +440,131 @@
       transition: all 0.3s;
       z-index: 1000;
     }
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
+    /* SunSynk Energy Analytics Modal */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(4, 7, 14, 0.88);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+    .modal-content {
+      background: #0d1322;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 980px;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(245, 158, 11, 0.15);
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 1.25rem 1.75rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .modal-close-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+    .modal-tabs {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1.75rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.015);
+    }
+    .modal-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #cbd5e1;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.5rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .modal-tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .modal-tab-btn.active {
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+    .date-nav {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+    }
+    .nav-arrow {
+      background: none;
+      border: none;
+      color: #cbd5e1;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+    .nav-arrow:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .modal-metrics-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      padding: 0.85rem 1.75rem;
+      background: rgba(15, 23, 42, 0.5);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+    }
+    .modal-metric-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .modal-chart-wrap {
+      padding: 1.5rem 1.75rem;
+      height: 420px;
+      position: relative;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
     }
   </style>
 </head>
@@ -383,36 +572,80 @@
 
   <header>
     <div class="brand">
-      <div class="brand-icon">⚡</div>
+      <div class="brand-icon" title="15 Cranleigh Home Management">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Geometric Smart House -->
+          <path d="M3 10.2L12 3L21 10.2V20C21 20.5523 20.5523 21 20 21H4C3.44772 21 3 20.5523 3 20V10.2Z" stroke="url(#homeGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Energy Core / Bolt -->
+          <path d="M12.5 7.5L8.5 13.5H12L11.5 18L15.5 12H12L12.5 7.5Z" fill="url(#boltGrad)" stroke="url(#boltGrad)" stroke-width="0.8" stroke-linejoin="round"/>
+          <!-- IoT Network Node -->
+          <circle cx="12" cy="3" r="1.5" fill="#38bdf8" />
+          <defs>
+            <linearGradient id="homeGrad" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#38bdf8"/>
+              <stop offset="1" stop-color="#34d399"/>
+            </linearGradient>
+            <linearGradient id="boltGrad" x1="8.5" y1="7.5" x2="15.5" y2="18" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#fbbf24"/>
+              <stop offset="1" stop-color="#f59e0b"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
       <div>
-        <div class="brand-title">Energy Conductor</div>
-        <div class="brand-subtitle">SunSynk 8kW + Sonoff Wi-Fi Controller</div>
+        <div class="brand-title">15 Cranleigh - Home Management System</div>
+        <div class="brand-subtitle">SunSynk 8kW + Sonoff Wi-Fi Controller + Pool Filter Control</div>
       </div>
     </div>
-    <div class="harness-badge" id="host-badge">
-      <div class="pulse-dot"></div>
-      <span id="host-text">Laptop Emulation</span>
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <button onclick="reloadConfig()" title="Reload config.yaml without restarting the server" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; background: rgba(255, 255, 255, 0.07); border: 1px solid var(--border); border-radius: 20px; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.07)'; this.style.color='var(--text-muted)';">
+        🔄 Reload Config
+      </button>
+      <div class="harness-badge" id="host-badge">
+        <div class="pulse-dot"></div>
+        <span id="host-text">Laptop Emulation</span>
+      </div>
     </div>
   </header>
 
   <main>
-    <!-- Live Flow Banner -->
+    <!-- Live Flow Banner (5 Cards Across) -->
     <div class="power-flow-banner">
+      <!-- 1. Solar Generation (Total + PV1 / PV2 breakdown) -->
       <div class="flow-node solar">
-        <div class="card-title">☀️ Solar Generation</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="card-title" style="margin-bottom: 0;">☀️ Solar Generation</div>
+          <button onclick="openEnergyModal()" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; border-radius: 6px; padding: 2px 8px; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(245,158,11,0.3)'" onmouseout="this.style.background='rgba(245,158,11,0.15)'">📊 Graphs</button>
+        </div>
         <div class="stat-val" id="solar-watts" style="color: var(--solar)">-- W</div>
+        <div class="stat-sub" id="solar-strings" style="color: #fbbf24; font-weight: 600;">PV1: -- W • PV2: -- W</div>
         <div class="stat-sub" id="solar-daily">Today: -- kWh</div>
       </div>
+
+      <!-- 2. Battery Storage (SOC) -->
       <div class="flow-node battery">
         <div class="card-title">🔋 Battery Storage</div>
         <div class="stat-val" id="batt-soc" style="color: var(--battery)">-- %</div>
-        <div class="stat-sub" id="batt-power">Flow: -- W</div>
+        <div class="stat-sub" id="batt-volts">53.2 V • 28°C</div>
+        <div class="stat-sub" id="batt-daily">Chg: -- kWh | Dis: -- kWh</div>
       </div>
+
+      <!-- 3. Battery Charge / Discharge in Watts -->
+      <div class="flow-node batt-power" id="batt-flow-node">
+        <div class="card-title" id="batt-flow-title">⚡ Battery Power</div>
+        <div class="stat-val" id="batt-flow-watts" style="color: #34d399">-- W</div>
+        <div class="stat-sub" id="batt-flow-status" style="font-weight: 600;">Standby</div>
+        <div class="stat-sub" id="batt-flow-amps">Current: -- A</div>
+      </div>
+
+      <!-- 4. Essential Load -->
       <div class="flow-node load">
         <div class="card-title">🏠 Essential Load</div>
         <div class="stat-val" id="load-watts" style="color: var(--load)">-- W</div>
         <div class="stat-sub" id="load-daily">Today: -- kWh</div>
       </div>
+
+      <!-- 5. Grid Connection -->
       <div class="flow-node grid">
         <div class="card-title">🌐 Grid Connection</div>
         <div class="stat-val" id="grid-watts" style="color: var(--grid)">-- W</div>
@@ -425,131 +658,222 @@
       <!-- Geyser Controller Card -->
       <div class="card">
         <div class="card-header">
-          <div class="card-title">♨️ Main Geyser (Sonoff)</div>
-          <span class="badge-status active" id="geyser-badge">STANDBY</span>
+          <div class="card-title" id="geyser-title">♨️ Geyser Thermi (Sonoff TH)</div>
+          <span class="badge-status active" id="geyser-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">LIVE</span>
         </div>
         <div class="geyser-gauge-wrap">
           <div class="temp-circle" id="geyser-circle">
             <span class="temp-deg" id="geyser-temp">--°</span>
             <span class="temp-label">Water Temp</span>
           </div>
-          <div class="stat-sub" id="geyser-power-readout">Draw: -- W (230V)</div>
+          <div class="stat-sub" id="geyser-power-readout">Draw: -- W • 230V</div>
         </div>
         <div style="margin: 1rem 0;">
-          <label style="font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+          <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
             <span>Target Temperature:</span>
-            <strong id="target-temp-label" style="color: var(--text)">55°C</strong>
-          </label>
-          <input type="range" min="40" max="65" value="55" step="1" id="target-temp-slider" style="width: 100%; margin-top: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span id="target-temp-badge" style="font-size: 0.72rem; padding: 2px 7px; border-radius: 6px; background: rgba(245, 158, 11, 0.15); color: #fbbf24; font-weight: 600; border: 1px solid rgba(245, 158, 11, 0.3);">☀️ Solar Peak Window</span>
+              <strong id="target-temp-label" style="color: var(--text); font-size: 1rem; font-family: 'JetBrains Mono', monospace;">57.0°C</strong>
+            </div>
+          </div>
+          <input type="range" min="30" max="70" value="57" step="0.5" id="target-temp-slider" style="width: 100%; margin-top: 0.35rem;">
+          <div id="target-temp-sub" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem; display: flex; justify-content: space-between;">
+            <span>Active Window: 11:00 – 14:00</span>
+            <span style="color: #38bdf8;">Cutoff 57.0°C • On below 56.5°C</span>
+          </div>
         </div>
         <button class="switch-btn off" id="geyser-toggle-btn" onclick="toggleSwitch('geyser')">
           Toggle Geyser Power
         </button>
       </div>
 
-      <!-- DB Switch 1: Pool Pump -->
+      <!-- DB Switch 1: Geyser Power Feed -->
       <div class="card">
         <div class="card-header">
-          <div class="card-title">🏊 Pool Pump (DB Switch)</div>
-          <span class="badge-status active" id="pool-badge">STANDBY</span>
+          <div class="card-title">⚡ Geyser Power Feed</div>
+          <span class="badge-status active" id="backup-badge">STANDBY</span>
         </div>
-        <div style="padding: 1.5rem 0;">
-          <div class="stat-val" id="pool-watts" style="color: var(--pool)">-- W</div>
-          <div class="stat-sub">Rated Load: 1100 W (Inductive Contactor)</div>
-          <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
-            Direct Wi-Fi relay control. Safe contactor switching avoids contact welding.
+        <div style="padding: 1.25rem 0;">
+          <div class="stat-val" id="backup-watts" style="color: #a78bfa">-- W</div>
+          <div style="display: flex; gap: 0.75rem; margin: 0.5rem 0 0.75rem 0; font-size: 0.88rem; font-weight: 600;">
+            <span id="backup-amps" style="color: #38bdf8;">Current: -- A</span>
+            <span style="color: var(--text-muted);">•</span>
+            <span id="backup-daily" style="color: #10b981;">Today: -- kWh</span>
+          </div>
+          <div class="stat-sub">Rated Load: 3000 W (Direct DB Circuit)</div>
+          <p style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
+            Main Power Feed for Geyser
           </p>
+        </div>
+        <button class="switch-btn off" id="backup-toggle-btn" onclick="toggleSwitch('geyser_backup')">
+          Toggle Geyser Power Feed
+        </button>
+      </div>
+
+      <!-- DB Switch 2: Pool Pump & RainPoint Thermometer -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🏊 Pool Pump & Water Temp</div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="badge-status" id="pool-temp-badge" style="background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); font-size: 0.85rem; font-weight: 700;">--°C</span>
+            <span class="badge-status active" id="pool-badge">STANDBY</span>
+          </div>
+        </div>
+        <div style="padding: 1.25rem 0 0.85rem 0;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding-bottom: 0.85rem; border-bottom: 1px solid var(--border); margin-bottom: 0.75rem;">
+            <div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px;">Pump Power</div>
+              <div class="stat-val" id="pool-watts" style="color: var(--pool); font-size: 1.75rem; margin-top: 0.25rem;">-- W</div>
+              <div class="stat-sub">1100 W Contactor</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px;">Water Temp</div>
+              <div class="stat-val" id="pool-temp-val" style="color: #38bdf8; font-size: 1.75rem; margin-top: 0.25rem;">--°C</div>
+              <div class="stat-sub" id="pool-temp-sub">--°F • 🔋 Normal</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.25rem;">
+            <span id="rainpoint-device-name">📡 RainPoint 15C Pool Sensor</span>
+            <span id="rainpoint-hub-status" style="color: #64748b; font-size: 0.75rem;">HWG023WBRF Hub</span>
+          </div>
         </div>
         <button class="switch-btn off" id="pool-toggle-btn" onclick="toggleSwitch('pool_pump')">
           Toggle Pool Pump
         </button>
       </div>
-
-      <!-- DB Switch 2: Auxiliary / Backup -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">⚡ Geyser Backup (DB Switch)</div>
-          <span class="badge-status active" id="backup-badge">STANDBY</span>
-        </div>
-        <div style="padding: 1.5rem 0;">
-          <div class="stat-val" id="backup-watts" style="color: #a78bfa">-- W</div>
-          <div class="stat-sub">Secondary Isolation / Backup Feed</div>
-          <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">
-            Independent DB line for manual or bypass energy routing.
-          </p>
-        </div>
-        <button class="switch-btn off" id="backup-toggle-btn" onclick="toggleSwitch('geyser_backup')">
-          Toggle Backup DB Switch
-        </button>
-      </div>
     </div>
 
-    <!-- SunSynk System Mode Control -->
+    <!-- System Controls & Automation Card (Tabbed: SunSynk & Geyser Profile) -->
     <div class="system-mode-card">
-      <div class="card-header">
-        <div>
-          <div class="card-title" style="color: #f1f5f9; font-size: 1.1rem;">⚙️ SunSynk System Mode & Parameters</div>
-          <div class="stat-sub">Read and program inverter operating modes, battery cutoffs, and Time of Use (TOU) slots</div>
-        </div>
-        <span class="badge-status active" id="inverter-source-badge">ONLINE</span>
+      <div class="card-tabs-header">
+        <button class="tab-btn active" id="tab-btn-sunsynk" onclick="switchControlTab('sunsynk')">
+          ⚙️ SunSynk System Mode & TOU
+        </button>
+        <button class="tab-btn" id="tab-btn-geyser" onclick="switchControlTab('geyser')">
+          ♨️ Geyser Thermi Schedule & Temp Thresholds
+        </button>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem;">
-        <div>
-          <label style="font-size: 0.8rem; color: var(--text-muted);">Work Mode</label>
-          <select id="work-mode-select" class="table-input" style="width: 100%; margin-top: 0.3rem;">
-            <option value="2">Zero Export to CT</option>
-            <option value="1">Zero Export to Load</option>
-            <option value="0">Selling First</option>
-          </select>
+      <!-- Tab 1: SunSynk Inverter Settings -->
+      <div class="tab-content active" id="tab-content-sunsynk">
+        <div class="card-header">
+          <div>
+            <div class="card-title" style="color: #f1f5f9; font-size: 1.1rem;">⚙️ SunSynk System Mode & Parameters</div>
+            <div class="stat-sub">Read and program inverter operating modes, battery cutoffs, and Time of Use (TOU) slots</div>
+          </div>
+          <span class="badge-status active" id="inverter-source-badge">ONLINE</span>
         </div>
 
-        <div>
-          <label style="font-size: 0.8rem; color: var(--text-muted);">Priority Priority</label>
-          <select id="priority-select" class="table-input" style="width: 100%; margin-top: 0.3rem;">
-            <option value="1">Load First</option>
-            <option value="0">Battery First</option>
-          </select>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem;">
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted);">Work Mode</label>
+            <select id="work-mode-select" class="table-input" style="width: 100%; margin-top: 0.3rem;">
+              <option value="2">Zero Export to CT</option>
+              <option value="1">Zero Export to Load</option>
+              <option value="0">Selling First</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted);">Priority Priority</label>
+            <select id="priority-select" class="table-input" style="width: 100%; margin-top: 0.3rem;">
+              <option value="1">Load First</option>
+              <option value="0">Battery First</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted);">Battery Shutdown SOC (%)</label>
+            <input type="number" id="batt-shutdown-input" class="table-input" style="width: 100%; margin-top: 0.3rem;" value="15">
+          </div>
+
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted);">Battery Low SOC (%)</label>
+            <input type="number" id="batt-low-input" class="table-input" style="width: 100%; margin-top: 0.3rem;" value="20">
+          </div>
+
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted);">Battery Restart SOC (%)</label>
+            <input type="number" id="batt-restart-input" class="table-input" style="width: 100%; margin-top: 0.3rem;" value="35">
+          </div>
         </div>
 
-        <div>
-          <label style="font-size: 0.8rem; color: var(--text-muted);">Battery Shutdown SOC (%)</label>
-          <input type="number" id="batt-shutdown-input" class="table-input" style="width: 100%; margin-top: 0.3rem;" value="15">
+        <!-- TOU Slots Table -->
+        <h4 style="margin-top: 1.5rem; font-size: 0.95rem; color: var(--text-muted);">Time of Use (TOU) 6-Slot Matrix</h4>
+        <div style="overflow-x: auto;">
+          <table class="tou-table">
+            <thead>
+              <tr>
+                <th>Slot</th>
+                <th>Time (HH:MM)</th>
+                <th>Max Power (W)</th>
+                <th>Target SOC (%)</th>
+                <th>Grid Charge</th>
+              </tr>
+            </thead>
+            <tbody id="tou-tbody">
+              <!-- Dynamic TOU rows -->
+            </tbody>
+          </table>
         </div>
 
-        <div>
-          <label style="font-size: 0.8rem; color: var(--text-muted);">Battery Low SOC (%)</label>
-          <input type="number" id="batt-low-input" class="table-input" style="width: 100%; margin-top: 0.3rem;" value="20">
-        </div>
-
-        <div>
-          <label style="font-size: 0.8rem; color: var(--text-muted);">Battery Restart SOC (%)</label>
-          <input type="number" id="batt-restart-input" class="table-input" style="width: 100%; margin-top: 0.3rem;" value="35">
-        </div>
+        <button class="btn-apply" onclick="saveSystemMode()">
+          💾 Apply Parameters to SunSynk Inverter
+        </button>
       </div>
 
-      <!-- TOU Slots Table -->
-      <h4 style="margin-top: 1.5rem; font-size: 0.95rem; color: var(--text-muted);">Time of Use (TOU) 6-Slot Matrix</h4>
-      <div style="overflow-x: auto;">
-        <table class="tou-table">
-          <thead>
-            <tr>
-              <th>Slot</th>
-              <th>Time (HH:MM)</th>
-              <th>Max Power (W)</th>
-              <th>Target SOC (%)</th>
-              <th>Grid Charge</th>
-            </tr>
-          </thead>
-          <tbody id="tou-tbody">
-            <!-- Dynamic TOU rows -->
-          </tbody>
-        </table>
-      </div>
+      <!-- Tab 2: Geyser Thermi eWeLink Auto-Control Settings -->
+      <div class="tab-content" id="tab-content-geyser">
+        <div class="card-header">
+          <div>
+            <div class="card-title" style="color: #f1f5f9; font-size: 1.1rem;">♨️ Geyser Thermi Timing & Temperature Thresholds</div>
+            <div class="stat-sub">Synchronized with your eWeLink device auto-control profile (Local Time: Africa/Johannesburg GMT+2)</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <label style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem; cursor: pointer; background: rgba(255,255,255,0.05); padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--border);">
+              <input type="checkbox" id="geyser-autocontrol-enable-cb" style="transform: scale(1.2); cursor: pointer;" checked onchange="updateMasterStatusText()">
+              <span id="geyser-autocontrol-status-txt" style="font-weight: 700; color: #10b981;">Auto-Control Active</span>
+            </label>
+            <span class="badge-status active" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">eWeLink Synced</span>
+          </div>
+        </div>
 
-      <button class="btn-apply" onclick="saveSystemMode()">
-        💾 Apply Parameters to SunSynk Inverter
-      </button>
+        <!-- Explanatory Banner -->
+        <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 0.85rem 1.25rem; margin: 1rem 0; font-size: 0.85rem; color: #fde68a; display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">ℹ️</span>
+          <div>
+            During each active schedule window, the geyser turns <strong>ON</strong> if water temp drops below the <em>Low Threshold</em>, and turns <strong>OFF</strong> once it reaches the <em>High Threshold</em>. Outside these windows or at window completion, the relay switches to the selected end action (default OFF).
+          </div>
+        </div>
+
+        <!-- Schedule Matrix Table -->
+        <div style="overflow-x: auto;">
+          <table class="tou-table">
+            <thead>
+              <tr>
+                <th>Schedule Slot / Window</th>
+                <th>Enabled</th>
+                <th>Start (Local)</th>
+                <th>End (Local)</th>
+                <th>Turn ON Below (°C)</th>
+                <th>Turn OFF Above (°C)</th>
+                <th>End Action</th>
+                <th>Frequency</th>
+              </tr>
+            </thead>
+            <tbody id="geyser-schedule-tbody">
+              <!-- Rendered dynamically via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+          <span id="geyser-autocontrol-msg" style="font-size: 0.85rem; color: var(--text-muted);">Loaded live from eWeLink device memory</span>
+          <button class="btn-apply" onclick="saveGeyserAutoControl()" style="background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);">
+            💾 Save Timing & Temperature Thresholds to Geyser
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Historical Telemetry Graphs -->
@@ -574,6 +898,37 @@
   </main>
 
   <div class="toast" id="toast">Settings updated successfully!</div>
+
+  <!-- SunSynk Energy Analytics Modal -->
+  <div id="energy-history-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="font-size: 1.25rem;">📊</span>
+          <span style="font-size: 1.1rem; font-weight: 700; color: #fff;">SunSynk System Energy Curves</span>
+        </div>
+        <button class="modal-close-btn" onclick="closeEnergyModal()">✕</button>
+      </div>
+
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" id="modal-tab-day" onclick="switchModalPeriod('day')">Day</button>
+        <button class="modal-tab-btn" id="modal-tab-month" onclick="switchModalPeriod('month')">Month</button>
+        <button class="modal-tab-btn" id="modal-tab-year" onclick="switchModalPeriod('year')">Year</button>
+
+        <div class="date-nav">
+          <button class="nav-arrow" onclick="navModalDate(-1)">◀</button>
+          <span id="modal-date-display" style="font-weight: 600; font-size: 0.88rem; color: #e2e8f0; min-width: 95px; text-align: center;">2026-10-11</span>
+          <button class="nav-arrow" onclick="navModalDate(1)">▶</button>
+        </div>
+      </div>
+
+      <div class="modal-metrics-bar" id="modal-metrics-bar"></div>
+
+      <div class="modal-chart-wrap">
+        <canvas id="modalEnergyChart"></canvas>
+      </div>
+    </div>
+  </div>
 
   <script>
     let energyChart = null;
@@ -614,14 +969,57 @@
       // Host Harness
       document.getElementById('host-text').innerText = harness.host_mode || 'Laptop Emulation';
 
-      // Solar
-      document.getElementById('solar-watts').innerText = `${s.solar?.total_watts ?? 0} W`;
-      document.getElementById('solar-daily').innerText = `Today: ${s.solar?.daily_kwh ?? 0} kWh`;
+      // Solar (Total + PV1 / PV2 split)
+      const solarObj = s.solar || {};
+      const totalSolar = Math.round(solarObj.total_watts ?? 0);
+      document.getElementById('solar-watts').innerText = `${totalSolar} W`;
+      
+      const pv1W = Math.round(solarObj.pv1_watts ?? 0);
+      const pv2W = Math.round(solarObj.pv2_watts ?? 0);
+      document.getElementById('solar-strings').innerText = `PV1: ${pv1W} W • PV2: ${pv2W} W`;
+      document.getElementById('solar-daily').innerText = `Today: ${solarObj.daily_kwh ?? 0} kWh`;
 
-      // Battery
+      // Battery Storage (SOC)
       document.getElementById('batt-soc').innerText = `${b.soc_percent ?? 0} %`;
+      const bVolt = b.voltage ? `${b.voltage.toFixed(1)} V` : '-- V';
+      const bTemp = b.temperature_c ? ` • ${b.temperature_c.toFixed(1)}°C` : '';
+      document.getElementById('batt-volts').innerText = `${bVolt}${bTemp}`;
+      document.getElementById('batt-daily').innerText = `Chg: ${b.daily_charge_kwh ?? 0} kWh | Dis: ${b.daily_discharge_kwh ?? 0} kWh`;
+
+      // Battery Power (Charge / Discharge in Watts)
       const bWatts = b.watts ?? 0;
-      document.getElementById('batt-power').innerText = bWatts >= 0 ? `Charging: +${bWatts} W` : `Discharging: ${bWatts} W`;
+      const bAmps = b.current_amps ?? 0;
+      const bFlowWatts = document.getElementById('batt-flow-watts');
+      const bFlowTitle = document.getElementById('batt-flow-title');
+      const bFlowStatus = document.getElementById('batt-flow-status');
+      const bFlowNode = document.getElementById('batt-flow-node');
+      const bFlowAmps = document.getElementById('batt-flow-amps');
+
+      if (bWatts < -20) {
+        // In Sunsynk, negative power = flowing into battery (Charging)
+        bFlowWatts.innerText = `${Math.round(bWatts)} W`;
+        bFlowWatts.style.color = '#10b981';
+        bFlowTitle.innerText = '⚡ Battery Charging';
+        bFlowStatus.innerText = 'Status: Charging (-)';
+        bFlowStatus.style.color = '#10b981';
+        bFlowNode.style.borderTopColor = '#10b981';
+      } else if (bWatts > 20) {
+        // Positive power = flowing out of battery (Discharging)
+        bFlowWatts.innerText = `+${Math.round(bWatts)} W`;
+        bFlowWatts.style.color = '#f59e0b';
+        bFlowTitle.innerText = '⚡ Battery Discharging';
+        bFlowStatus.innerText = 'Status: Discharging (+)';
+        bFlowStatus.style.color = '#f59e0b';
+        bFlowNode.style.borderTopColor = '#f59e0b';
+      } else {
+        bFlowWatts.innerText = '0 W';
+        bFlowWatts.style.color = '#94a3b8';
+        bFlowTitle.innerText = '⚡ Battery Idle';
+        bFlowStatus.innerText = 'Status: Standby / Float';
+        bFlowStatus.style.color = '#94a3b8';
+        bFlowNode.style.borderTopColor = '#64748b';
+      }
+      bFlowAmps.innerText = `Current: ${bAmps >= 0 ? '+' : ''}${bAmps.toFixed(1)} A`;
 
       // Load & Grid
       document.getElementById('load-watts').innerText = `${l.total_watts ?? 0} W`;
@@ -632,15 +1030,74 @@
       document.getElementById('grid-daily').innerText = `Today: ${g.daily_import_kwh ?? 0} kWh`;
 
       // Geyser
-      document.getElementById('geyser-temp').innerText = `${geyser.temperature_c ? geyser.temperature_c.toFixed(1) : '--'}°`;
-      document.getElementById('geyser-power-readout').innerText = `Draw: ${geyser.power_watts ?? 0} W (230V)`;
+      const isGeyserLive = !geyser.is_mock;
+      document.getElementById('geyser-temp').innerText = `${geyser.temperature_c !== null && geyser.temperature_c !== undefined ? geyser.temperature_c.toFixed(1) : '--'}°`;
+      const rssiText = geyser.rssi ? ` • Wi-Fi: ${geyser.rssi} dBm` : '';
+      document.getElementById('geyser-power-readout').innerText = `Draw: ${Math.round(geyser.power_watts ?? 0)} W${rssiText}`;
       currentGeyserState = geyser.state;
       const gBtn = document.getElementById('geyser-toggle-btn');
       gBtn.className = `switch-btn ${geyser.state === 'on' ? 'on' : 'off'}`;
-      gBtn.innerText = geyser.state === 'on' ? '🔥 Geyser ON (Click to Stop)' : '⚡ Geyser OFF (Click to Heat)';
-      document.getElementById('geyser-badge').innerText = geyser.state === 'on' ? 'HEATING' : 'STANDBY';
+      gBtn.innerText = geyser.state === 'on' ? '🔥 Geyser HEATING (Click to Stop)' : '⚡ Geyser OFF (Click to Heat)';
+      const gBadge = document.getElementById('geyser-badge');
+      if (geyser.state === 'on') {
+        gBadge.innerText = 'HEATING';
+        gBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+        gBadge.style.color = '#ef4444';
+        gBadge.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+      } else {
+        gBadge.innerText = isGeyserLive ? 'STANDBY (LIVE)' : 'STANDBY (MOCK)';
+        gBadge.style.background = isGeyserLive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(100, 116, 139, 0.15)';
+        gBadge.style.color = isGeyserLive ? '#10b981' : '#94a3b8';
+        gBadge.style.borderColor = isGeyserLive ? 'rgba(16, 185, 129, 0.3)' : 'rgba(100, 116, 139, 0.3)';
+      }
 
-      // Pool Pump
+      // Target Temperature & Active Schedule Window alignment
+      const targetVal = geyser.target_temp_c !== undefined && geyser.target_temp_c !== null ? geyser.target_temp_c : 55.0;
+      const targetLabel = document.getElementById('target-temp-label');
+      if (targetLabel && !isUserDraggingTemp) {
+        targetLabel.innerText = `${targetVal.toFixed(1)}°C`;
+      }
+
+      const targetSlider = document.getElementById('target-temp-slider');
+      if (targetSlider && !isUserDraggingTemp) {
+        targetSlider.value = targetVal;
+      }
+
+      const activeWin = geyser.active_schedule_window;
+      const targetBadge = document.getElementById('target-temp-badge');
+      const targetSub = document.getElementById('target-temp-sub');
+
+      if (targetBadge && targetSub) {
+        if (activeWin && activeWin.is_active) {
+          const winIcon = activeWin.name.toLowerCase().includes('solar') ? '☀️ ' : (activeWin.name.toLowerCase().includes('morning') ? '🌅 ' : '⏰ ');
+          targetBadge.innerText = `${winIcon}${activeWin.name}`;
+          targetBadge.style.display = 'inline-block';
+          targetBadge.style.background = 'rgba(245, 158, 11, 0.15)';
+          targetBadge.style.color = '#fbbf24';
+          targetBadge.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+
+          const lowStr = activeWin.low_temp_c !== null && activeWin.low_temp_c !== undefined ? ` • On below ${activeWin.low_temp_c.toFixed(1)}°C` : '';
+          const highStr = activeWin.high_temp_c !== null && activeWin.high_temp_c !== undefined ? `Cutoff ${activeWin.high_temp_c.toFixed(1)}°C` : `Target ${targetVal.toFixed(1)}°C`;
+          targetSub.innerHTML = `
+            <span>Active Window: <strong>${activeWin.from} – ${activeWin.to}</strong></span>
+            <span style="color: #38bdf8;">${highStr}${lowStr}</span>
+          `;
+        } else {
+          targetBadge.innerText = 'Thermostat Standby';
+          targetBadge.style.display = 'inline-block';
+          targetBadge.style.background = 'rgba(148, 163, 184, 0.15)';
+          targetBadge.style.color = '#94a3b8';
+          targetBadge.style.borderColor = 'rgba(148, 163, 184, 0.3)';
+
+          const manualVal = geyser.manual_target_temp_c !== undefined ? geyser.manual_target_temp_c : targetVal;
+          targetSub.innerHTML = `
+            <span>Schedule: Outside Active Windows</span>
+            <span style="color: #94a3b8;">Manual Setpoint: ${manualVal.toFixed(1)}°C</span>
+          `;
+        }
+      }
+
+      // Pool Pump & RainPoint Pool Thermometer
       currentPoolState = pool.state;
       const pBtn = document.getElementById('pool-toggle-btn');
       pBtn.className = `switch-btn ${pool.state === 'on' ? 'pool-on' : 'off'}`;
@@ -648,12 +1105,37 @@
       document.getElementById('pool-watts').innerText = `${pool.power_watts ?? 0} W`;
       document.getElementById('pool-badge').innerText = pool.state === 'on' ? 'RUNNING' : 'STANDBY';
 
-      // Geyser Backup
+      const rp = data.rainpoint || {};
+      const poolTempC = rp.temp_c !== undefined && rp.temp_c !== null ? rp.temp_c : pool.water_temp_c;
+      const poolTempF = rp.temp_f !== undefined && rp.temp_f !== null ? rp.temp_f : pool.water_temp_f;
+      if (poolTempC !== undefined && poolTempC !== null) {
+        document.getElementById('pool-temp-val').innerText = `${poolTempC.toFixed(1)}°C`;
+        document.getElementById('pool-temp-badge').innerText = `${poolTempC.toFixed(1)}°C`;
+        const fStr = poolTempF !== undefined && poolTempF !== null ? `${poolTempF.toFixed(1)}°F` : '';
+        const batStr = rp.battery_ok ? '🔋 Normal' : '⚠️ Low Battery';
+        document.getElementById('pool-temp-sub').innerText = `${fStr} • ${batStr}`;
+      } else {
+        document.getElementById('pool-temp-val').innerText = '--°C';
+        document.getElementById('pool-temp-badge').innerText = '--°C';
+      }
+      if (rp.device_name) {
+        document.getElementById('rainpoint-device-name').innerText = `📡 ${rp.device_name}`;
+      }
+      if (rp.hub_name) {
+        const rssiStr = rp.hub_rssi_dbm ? ` (${rp.hub_rssi_dbm} dBm)` : '';
+        document.getElementById('rainpoint-hub-status').innerText = `${rp.hub_name}${rssiStr}`;
+      }
+
+      // Geyser Backup (Main Power Feed)
       currentBackupState = backup.state;
       const bBtn = document.getElementById('backup-toggle-btn');
       bBtn.className = `switch-btn ${backup.state === 'on' ? 'on' : 'off'}`;
-      bBtn.innerText = backup.state === 'on' ? '⚡ Backup Feed ACTIVE' : '⏹️ Backup Feed ISOLATED';
-      document.getElementById('backup-watts').innerText = `${backup.power_watts ?? 0} W`;
+      bBtn.innerText = backup.state === 'on' ? '⚡ Power Feed ACTIVE' : '⏹️ Power Feed ISOLATED';
+      document.getElementById('backup-watts').innerText = `${Math.round(backup.power_watts ?? 0)} W`;
+      const bAmpsEl = document.getElementById('backup-amps');
+      if (bAmpsEl) bAmpsEl.innerText = `Current: ${(backup.current_amps ?? 0).toFixed(1)} A`;
+      const bDailyEl = document.getElementById('backup-daily');
+      if (bDailyEl) bDailyEl.innerText = `Today: ${(backup.daily_kwh ?? 0).toFixed(2)} kWh`;
       document.getElementById('backup-badge').innerText = backup.state === 'on' ? 'ACTIVE' : 'ISOLATED';
     }
 
@@ -679,19 +1161,28 @@
     }
 
     // Target Temperature Slider
+    let isUserDraggingTemp = false;
     const tempSlider = document.getElementById('target-temp-slider');
-    tempSlider.addEventListener('change', async (e) => {
-      const val = parseFloat(e.target.value);
-      document.getElementById('target-temp-label').innerText = `${val}°C`;
-      try {
-        await fetch('/api/geyser/temp', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({target_temp_c: val})
-        });
-        showToast(`Target Geyser temp set to ${val}°C`);
-      } catch (err) {}
-    });
+    if (tempSlider) {
+      tempSlider.addEventListener('input', (e) => {
+        isUserDraggingTemp = true;
+        const val = parseFloat(e.target.value);
+        document.getElementById('target-temp-label').innerText = `${val.toFixed(1)}°C`;
+      });
+      tempSlider.addEventListener('change', async (e) => {
+        const val = parseFloat(e.target.value);
+        document.getElementById('target-temp-label').innerText = `${val.toFixed(1)}°C`;
+        try {
+          await fetch('/api/geyser/temp', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({target_temp_c: val})
+          });
+          showToast(`Target Geyser temp set to ${val.toFixed(1)}°C`);
+        } catch (err) {}
+        setTimeout(() => { isUserDraggingTemp = false; }, 1200);
+      });
+    }
 
     async function loadSystemMode() {
       try {
@@ -762,6 +1253,171 @@
       }
     }
 
+    // --- Tab Switching & Geyser Auto-Control Functions ---
+    function switchControlTab(tabName) {
+      document.getElementById('tab-btn-sunsynk').classList.toggle('active', tabName === 'sunsynk');
+      document.getElementById('tab-btn-geyser').classList.toggle('active', tabName === 'geyser');
+      document.getElementById('tab-content-sunsynk').classList.toggle('active', tabName === 'sunsynk');
+      document.getElementById('tab-content-geyser').classList.toggle('active', tabName === 'geyser');
+      if (tabName === 'geyser') {
+        loadGeyserAutoControl();
+      }
+    }
+
+    function updateMasterStatusText() {
+      const cb = document.getElementById('geyser-autocontrol-enable-cb');
+      const txt = document.getElementById('geyser-autocontrol-status-txt');
+      if (cb && txt) {
+        txt.innerText = cb.checked ? 'Auto-Control Active' : 'Auto-Control Disabled';
+        txt.style.color = cb.checked ? '#10b981' : '#94a3b8';
+      }
+    }
+
+    async function loadGeyserAutoControl() {
+      try {
+        const res = await fetch('/api/geyser/autocontrol');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const isMaster = Boolean(data.autoControlEnabled);
+        const masterCb = document.getElementById('geyser-autocontrol-enable-cb');
+        if (masterCb) masterCb.checked = isMaster;
+        updateMasterStatusText();
+
+        const tbody = document.getElementById('geyser-schedule-tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const slotLabels = [
+          '🌅 Morning Boost Window',
+          '☀️ Solar Peak Heating Window',
+          '🌆 Evening / Extra Window'
+        ];
+
+        const rules = (data.autoControl && data.autoControl.length > 0) ? [...data.autoControl] : [];
+        while (rules.length < 3) {
+          rules.push({
+            enable: false,
+            finalStateOfRelay: 'off',
+            deviceType: 'temperature',
+            targets: [{ high: '55.0', reaction: { switch: 'off' } }, { low: '45.0', reaction: { switch: 'on' } }],
+            effTime: { spanType: 'range', daysLocal: [0, 1, 2, 3, 4, 5, 6], fromLocal: '17:00', toLocal: '18:00' }
+          });
+        }
+
+        rules.forEach((rule, idx) => {
+          const eff = rule.effTime || {};
+          const targets = rule.targets || [];
+          let highTemp = '55.0';
+          let lowTemp = '45.0';
+          targets.forEach(t => {
+            if (t.high !== undefined) highTemp = t.high;
+            if (t.low !== undefined) lowTemp = t.low;
+          });
+
+          const fromTime = eff.fromLocal || eff.from || '06:00';
+          const toTime = eff.toLocal || eff.to || '07:00';
+          const isEnabled = Boolean(rule.enable);
+          const finalState = (rule.finalStateOfRelay || 'off').toLowerCase();
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td style="font-weight: 600; color: #f8fafc;">${slotLabels[idx] || `Slot ${idx + 1}`}</td>
+            <td><input type="checkbox" id="g-enable-${idx}" ${isEnabled ? 'checked' : ''} style="transform: scale(1.2); cursor: pointer;"></td>
+            <td><input type="text" class="table-input" id="g-from-${idx}" value="${fromTime}" placeholder="HH:MM" style="width: 75px;"></td>
+            <td><input type="text" class="table-input" id="g-to-${idx}" value="${toTime}" placeholder="HH:MM" style="width: 75px;"></td>
+            <td><input type="number" step="0.5" class="table-input" id="g-low-${idx}" value="${lowTemp}" style="width: 80px; color: #34d399; font-weight: 700;"></td>
+            <td><input type="number" step="0.5" class="table-input" id="g-high-${idx}" value="${highTemp}" style="width: 80px; color: #ef4444; font-weight: 700;"></td>
+            <td>
+              <select class="table-input" id="g-relay-${idx}" style="width: 100px;">
+                <option value="off" ${finalState === 'off' ? 'selected' : ''}>Relay OFF</option>
+                <option value="on" ${finalState === 'on' ? 'selected' : ''}>Relay ON</option>
+                <option value="stay" ${finalState === 'stay' ? 'selected' : ''}>Stay</option>
+              </select>
+            </td>
+            <td><span style="font-size: 0.75rem; color: #94a3b8; background: rgba(255,255,255,0.06); padding: 0.2rem 0.5rem; border-radius: 4px;">Daily (Mon-Sun)</span></td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        const statusMsg = document.getElementById('geyser-autocontrol-msg');
+        if (statusMsg) {
+          statusMsg.innerText = `Synced with eWeLink (Timezone: GMT+${data.timeZone ?? 2})`;
+        }
+      } catch (e) {
+        console.error('Failed to load geyser auto-control', e);
+      }
+    }
+
+    async function saveGeyserAutoControl() {
+      const isMaster = document.getElementById('geyser-autocontrol-enable-cb').checked ? 1 : 0;
+      const rules = [];
+
+      for (let i = 0; i < 3; i++) {
+        const enEl = document.getElementById(`g-enable-${i}`);
+        if (!enEl) continue;
+        const isEn = enEl.checked;
+        const fromLocal = document.getElementById(`g-from-${i}`).value.trim();
+        const toLocal = document.getElementById(`g-to-${i}`).value.trim();
+        const lowVal = parseFloat(document.getElementById(`g-low-${i}`).value) || 40.0;
+        const highVal = parseFloat(document.getElementById(`g-high-${i}`).value) || 55.0;
+        const finalRelay = document.getElementById(`g-relay-${i}`).value;
+
+        rules.push({
+          enable: isEn,
+          finalStateOfRelay: finalRelay,
+          deviceType: "temperature",
+          targets: [
+            { high: highVal.toFixed(1), reaction: { switch: "off" } },
+            { low: lowVal.toFixed(1), reaction: { switch: "on" } }
+          ],
+          effTime: {
+            spanType: "range",
+            daysLocal: [0, 1, 2, 3, 4, 5, 6],
+            fromLocal: fromLocal,
+            toLocal: toLocal
+          }
+        });
+      }
+
+      try {
+        showToast('Saving Geyser timing & thresholds to eWeLink...');
+        const res = await fetch('/api/geyser/autocontrol', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            autoControlEnabled: isMaster,
+            autoControl: rules
+          })
+        });
+        if (res.ok) {
+          showToast('Geyser timing & thresholds successfully updated on eWeLink!');
+          await loadGeyserAutoControl();
+        } else {
+          showToast('Failed to apply settings to eWeLink device.');
+        }
+      } catch (e) {
+        showToast('Error communicating with eWeLink server.');
+      }
+    }
+
+    async function reloadConfig() {
+      try {
+        showToast('Reloading configuration...');
+        const res = await fetch('/api/reload', { method: 'POST' });
+        if (res.ok) {
+          showToast('Configuration reloaded from config.yaml!');
+          await fetchState();
+          await loadSystemMode();
+          await loadGeyserAutoControl();
+        } else {
+          showToast('Failed to reload configuration.');
+        }
+      } catch (e) {
+        showToast('Error communicating with server.');
+      }
+    }
+
     async function initCharts() {
       const ctxEnergy = document.getElementById('energyChart').getContext('2d');
       energyChart = new Chart(ctxEnergy, {
@@ -769,17 +1425,30 @@
         data: {
           labels: [],
           datasets: [
-            { label: 'Solar Generation (W)', borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', data: [], tension: 0.3, fill: true },
-            { label: 'House Load (W)', borderColor: '#38bdf8', data: [], tension: 0.3 }
+            { label: 'Solar Generation (W)', borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.12)', data: [], tension: 0.3, fill: true, borderWidth: 2.5 },
+            { label: 'House Load (W)', borderColor: '#38bdf8', data: [], tension: 0.3, borderWidth: 2.5 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#94a3b8' } } },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#f8fafc',
+                font: { size: 12, weight: '700' }
+              }
+            }
+          },
           scales: {
-            x: { ticks: { color: '#64748b' } },
-            y: { ticks: { color: '#64748b' } }
+            x: {
+              ticks: { color: '#f1f5f9', font: { size: 11, weight: '600' } },
+              grid: { color: 'rgba(255, 255, 255, 0.12)' }
+            },
+            y: {
+              ticks: { color: '#f1f5f9', font: { size: 11, weight: '600' } },
+              grid: { color: 'rgba(255, 255, 255, 0.12)' }
+            }
           }
         }
       });
@@ -790,16 +1459,30 @@
         data: {
           labels: [],
           datasets: [
-            { label: 'Geyser Temp (°C)', borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', data: [], tension: 0.3, fill: true }
+            { label: 'Geyser Temp (°C)', borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.12)', data: [], tension: 0.3, fill: true, borderWidth: 2.5 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#94a3b8' } } },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#f8fafc',
+                font: { size: 12, weight: '700' }
+              }
+            }
+          },
           scales: {
-            x: { ticks: { color: '#64748b' } },
-            y: { ticks: { color: '#64748b' }, min: 30, max: 70 }
+            x: {
+              ticks: { color: '#f1f5f9', font: { size: 11, weight: '600' } },
+              grid: { color: 'rgba(255, 255, 255, 0.12)' }
+            },
+            y: {
+              ticks: { color: '#f1f5f9', font: { size: 11, weight: '600' } },
+              min: 30, max: 70,
+              grid: { color: 'rgba(255, 255, 255, 0.12)' }
+            }
           }
         }
       });
@@ -832,9 +1515,212 @@
       } catch (e) {}
     }
 
+    // SunSynk Energy History Modal Logic
+    let modalPeriod = 'day';
+    let modalCurrentDate = new Date();
+    let modalChartInstance = null;
+
+    function openEnergyModal() {
+      document.getElementById('energy-history-modal').style.display = 'flex';
+      loadModalData();
+    }
+
+    function closeEnergyModal() {
+      document.getElementById('energy-history-modal').style.display = 'none';
+    }
+
+    function switchModalPeriod(period) {
+      modalPeriod = period;
+      document.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`modal-tab-${period}`);
+      if (activeBtn) activeBtn.classList.add('active');
+      loadModalData();
+    }
+
+    function navModalDate(delta) {
+      if (modalPeriod === 'day') {
+        modalCurrentDate.setDate(modalCurrentDate.getDate() + delta);
+      } else if (modalPeriod === 'month') {
+        modalCurrentDate.setMonth(modalCurrentDate.getMonth() + delta);
+      } else if (modalPeriod === 'year') {
+        modalCurrentDate.setFullYear(modalCurrentDate.getFullYear() + delta);
+      }
+      loadModalData();
+    }
+
+    function formatModalDateString() {
+      const y = modalCurrentDate.getFullYear();
+      const m = String(modalCurrentDate.getMonth() + 1).padStart(2, '0');
+      const d = String(modalCurrentDate.getDate()).padStart(2, '0');
+      if (modalPeriod === 'day') return `${y}-${m}-${d}`;
+      if (modalPeriod === 'month') return `${y}-${m}`;
+      return `${y}`;
+    }
+
+    async function loadModalData() {
+      const dateStr = formatModalDateString();
+      document.getElementById('modal-date-display').innerText = dateStr;
+
+      try {
+        let url = '';
+        if (modalPeriod === 'day') {
+          url = `/api/sunsynk/energy/day?date=${dateStr}`;
+        } else {
+          const mStr = (modalPeriod === 'year') ? `${modalCurrentDate.getFullYear()}-10` : dateStr;
+          url = `/api/sunsynk/energy/month?month=${mStr}`;
+        }
+
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const data = await res.json();
+        renderModalMetrics(data);
+        renderModalChart(data);
+      } catch (e) {
+        console.error('Failed to load modal energy data', e);
+      }
+    }
+
+    function renderModalMetrics(data) {
+      const bar = document.getElementById('modal-metrics-bar');
+      bar.innerHTML = '';
+      const summary = data.summary || {};
+
+      const items = [
+        { label: 'PV Generation', val: summary.pv_daily_kwh ?? summary.pv_monthly_kwh ?? 0, unit: 'kWh', color: '#f59e0b', icon: '☀️' },
+        { label: 'Load Consumption', val: summary.load_daily_kwh ?? summary.load_monthly_kwh ?? 0, unit: 'kWh', color: '#ef4444', icon: '🏠' },
+        { label: 'Battery Charge', val: summary.charge_daily_kwh ?? summary.charge_monthly_kwh ?? 0, unit: 'kWh', color: '#10b981', icon: '🔋' },
+        { label: 'Battery Discharge', val: summary.discharge_daily_kwh ?? summary.discharge_monthly_kwh ?? 0, unit: 'kWh', color: '#38bdf8', icon: '⚡' },
+        { label: 'Grid Import', val: summary.grid_buy_kwh ?? summary.grid_buy_monthly_kwh ?? 0, unit: 'kWh', color: '#8b5cf6', icon: '🔌' }
+      ];
+
+      items.forEach(it => {
+        const pill = document.createElement('div');
+        pill.className = 'modal-metric-pill';
+        pill.innerHTML = `
+          <span style="font-size: 1rem;">${it.icon}</span>
+          <span style="color: #cbd5e1; font-weight: 500;">${it.label}:</span>
+          <strong style="color: ${it.color}; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;">${Number(it.val).toFixed(1)} ${it.unit}</strong>
+        `;
+        bar.appendChild(pill);
+      });
+    }
+
+    function renderModalChart(data) {
+      const ctx = document.getElementById('modalEnergyChart').getContext('2d');
+      if (modalChartInstance) {
+        modalChartInstance.destroy();
+      }
+
+      if (modalPeriod === 'day') {
+        const seriesList = data.series || [];
+        if (!seriesList.length) return;
+
+        const labels = (seriesList[0].data || []).map(d => d[0]);
+        const datasets = seriesList.map(s => {
+          const isSOC = (s.name === 'SOC');
+          return {
+            label: `${s.name} (${s.unit})`,
+            data: (s.data || []).map(d => d[1]),
+            borderColor: s.color || '#38bdf8',
+            backgroundColor: isSOC ? 'transparent' : `${s.color || '#38bdf8'}15`,
+            borderWidth: isSOC ? 2.5 : 2,
+            borderDash: isSOC ? [4, 4] : [],
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            tension: 0.3,
+            fill: !isSOC,
+            yAxisID: isSOC ? 'y1' : 'y'
+          };
+        });
+
+        modalChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  color: '#f8fafc',
+                  font: { size: 12, weight: '700' },
+                  boxWidth: 12,
+                  usePointStyle: true
+                }
+              },
+              tooltip: { backgroundColor: '#090d16', borderColor: 'rgba(255,255,255,0.25)', borderWidth: 1 }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#f1f5f9', font: { size: 11, weight: '600' }, maxTicksLimit: 12 },
+                grid: { color: 'rgba(255,255,255,0.1)' }
+              },
+              y: {
+                position: 'left',
+                ticks: { color: '#f1f5f9', font: { size: 11, weight: '600' } },
+                title: { display: true, text: 'Watts (W)', color: '#ffffff', font: { size: 12, weight: '700' } },
+                grid: { color: 'rgba(255,255,255,0.1)' }
+              },
+              y1: {
+                position: 'right',
+                min: 0,
+                max: 100,
+                ticks: { color: '#38bdf8', font: { size: 11, weight: '600' }, callback: v => `${v}%` },
+                title: { display: true, text: 'Battery SOC (%)', color: '#38bdf8', font: { size: 12, weight: '700' } },
+                grid: { drawOnChartArea: false }
+              }
+            }
+          }
+        });
+      } else {
+        // Month or Year Bar Chart
+        const seriesList = data.series || [];
+        if (!seriesList.length) return;
+
+        const labels = (seriesList[0].data || []).map(d => d[0]);
+        const datasets = seriesList.map(s => ({
+          label: `${s.name} (${s.unit})`,
+          data: (s.data || []).map(d => d[1]),
+          backgroundColor: s.color || '#38bdf8',
+          borderRadius: 4
+        }));
+
+        modalChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: { color: '#f8fafc', font: { size: 12, weight: '700' }, boxWidth: 12 }
+              },
+              tooltip: { backgroundColor: '#090d16', borderColor: 'rgba(255,255,255,0.25)', borderWidth: 1 }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#f1f5f9', font: { size: 11, weight: '600' } },
+                grid: { color: 'rgba(255,255,255,0.1)' }
+              },
+              y: {
+                ticks: { color: '#f1f5f9', font: { size: 11, weight: '600' } },
+                title: { display: true, text: 'Energy (kWh)', color: '#ffffff', font: { size: 12, weight: '700' } },
+                grid: { color: 'rgba(255,255,255,0.1)' }
+              }
+            }
+          }
+        });
+      }
+    }
+
     window.onload = async () => {
       await initCharts();
       await loadSystemMode();
+      await loadGeyserAutoControl();
       await fetchState();
       await updateCharts();
       setInterval(fetchState, 3000);

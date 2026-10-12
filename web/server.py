@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException, Body
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from contextlib import asynccontextmanager
 
 from config.settings import load_config
@@ -63,6 +63,58 @@ async def set_geyser_temp(payload: Dict[str, Any] = Body(...)):
         raise HTTPException(status_code=400, detail="Temperature must be between 30°C and 75°C")
     engine.set_geyser_temp(float(temp))
     return {"success": True, "target_temp_c": float(temp)}
+
+@app.get("/api/geyser/autocontrol")
+async def get_geyser_autocontrol():
+    return await engine.get_geyser_auto_control()
+
+@app.post("/api/geyser/autocontrol")
+async def update_geyser_autocontrol(payload: Dict[str, Any] = Body(...)):
+    rules = payload.get("autoControl", [])
+    enabled = payload.get("autoControlEnabled", 1)
+    ok = await engine.update_geyser_auto_control(rules, enabled)
+    if not ok:
+        raise HTTPException(status_code=500, detail="Failed to update Geyser autoControl on eWeLink")
+    return {"success": True, "autoControlEnabled": enabled, "autoControl": rules}
+
+@app.get("/api/sunsynk/energy/day")
+async def get_sunsynk_energy_day(date: Optional[str] = None):
+    import datetime
+    d = date or datetime.date.today().strftime("%Y-%m-%d")
+    return await engine.get_energy_day(d)
+
+@app.get("/api/sunsynk/energy/month")
+async def get_sunsynk_energy_month(month: Optional[str] = None):
+    import datetime
+    m = month or datetime.date.today().strftime("%Y-%m")
+    return await engine.get_energy_month(m)
+
+@app.get("/api/database/stats")
+async def get_database_stats():
+    return engine.db.get_database_stats()
+
+@app.get("/api/database/history")
+async def get_database_history(start: Optional[float] = None, end: Optional[float] = None, points: int = 150):
+    import time
+    now = time.time()
+    s = start if start is not None else (now - 86400)
+    e = end if end is not None else now
+    return {"history": engine.db.get_history_range(s, e, points)}
+
+
+@app.post("/api/reload")
+async def reload_config_endpoint():
+    import importlib
+    import sys
+    for mod in ["connectors.sunsynk.cloud_client", "connectors.sunsynk.client", "core.engine"]:
+        if mod in sys.modules:
+            try:
+                importlib.reload(sys.modules[mod])
+            except Exception:
+                pass
+    new_cfg = load_config()
+    await engine.reload_config(new_cfg)
+    return {"success": True, "message": "Configuration reloaded successfully"}
 
 # Serve web dashboard
 @app.get("/")

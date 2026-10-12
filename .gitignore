@@ -5,6 +5,9 @@ __pycache__/
 .env
 venv/
 env/
-data/*.db
+data/*.db*
+data/*.json
+snapshot.json
+scratch/
 .vscode/
 .idea/
