@@ -116,9 +116,21 @@ async def reload_config_endpoint():
     await engine.reload_config(new_cfg)
     return {"success": True, "message": "Configuration reloaded successfully"}
 
-# Serve web dashboard
+# Serve Master Portal & Energy Apps
 @app.get("/")
-async def index():
+async def portal_root():
+    return FileResponse(STATIC_DIR / "portal.html")
+
+@app.get("/portal")
+async def portal_page():
+    return FileResponse(STATIC_DIR / "portal.html")
+
+@app.get("/energy")
+async def energy_dashboard():
+    return FileResponse(STATIC_DIR / "index.html")
+
+@app.get("/dashboard")
+async def dashboard_alias():
     return FileResponse(STATIC_DIR / "index.html")
 
 app.mount("/", StaticFiles(directory=STATIC_DIR), name="static")

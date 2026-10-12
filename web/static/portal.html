@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>15 Cranleigh - Master Home Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b111e;
+      --card-bg: rgba(18, 26, 43, 0.82);
+      --card-hover: rgba(26, 38, 64, 0.95);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(56, 189, 248, 0.28);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --solar: #f59e0b;
+      --battery: #10b981;
+      --grid: #8b5cf6;
+      --load: #38bdf8;
+      --geyser: #ef4444;
+      --pool: #06b6d4;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(245, 158, 11, 0.07) 0%, transparent 40%),
+        radial-gradient(circle at 90% 15%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 50% 90%, rgba(16, 185, 129, 0.06) 0%, transparent 45%);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 1.25rem;
+    }
+
+    /* Top Master Bar */
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.36);
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .brand-icon {
+      width: 46px;
+      height: 46px;
+      background: linear-gradient(135deg, #f59e0b, #06b6d4);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.35);
+    }
+
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(to right, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .system-clock {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .clock-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #38bdf8;
+      letter-spacing: 1px;
+    }
+
+    .clock-date {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .host-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      margin-top: 0.25rem;
+    }
+
+    .host-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Live Telemetry Glancer Strip */
+    .telemetry-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .strip-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.9rem 1rem;
+      backdrop-filter: blur(12px);
+      transition: transform 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .strip-card:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .strip-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .strip-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 0.3rem 0;
+    }
+
+    .strip-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    /* App Launcher Grid */
+    .portal-section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+      flex-grow: 1;
+    }
+
+    .app-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      min-height: 200px;
+    }
+
+    .app-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--accent-gradient, linear-gradient(90deg, #38bdf8, #818cf8));
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    .app-card:hover {
+      background: var(--card-hover);
+      border-color: var(--border-glow);
+      transform: translateY(-4px);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45), 0 0 20px rgba(56, 189, 248, 0.15);
+    }
+
+    .app-card:active {
+      transform: scale(0.98);
+    }
+
+    .app-card.disabled {
+      opacity: 0.6;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .app-card.disabled::before {
+      background: #475569;
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .app-icon-wrap {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .app-status-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.3rem 0.7rem;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .badge-live {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .badge-heating {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    .badge-pool {
+      background: rgba(6, 182, 212, 0.15);
+      color: #38bdf8;
+      border-color: rgba(6, 182, 212, 0.35);
+    }
+
+    .badge-roadmap {
+      background: rgba(148, 163, 184, 0.1);
+      color: #94a3b8;
+    }
+
+    .app-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.35rem;
+    }
+
+    .app-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin-bottom: 1.25rem;
+    }
+
+    .app-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .app-action-btn {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .app-action-btn svg {
+      transition: transform 0.2s;
+    }
+
+    .app-card:hover .app-action-btn svg {
+      transform: translateX(4px);
+    }
+
+    /* Touch Friendly / Mobile Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 0.75rem;
+      }
+      .top-header {
+        padding: 0.85rem 1rem;
+        margin-bottom: 1rem;
+      }
+      .brand-title {
+        font-size: 1.2rem;
+      }
+      .telemetry-strip {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.65rem;
+      }
+      .app-grid {
+        grid-template-columns: 1fr;
+        gap: 0.9rem;
+      }
+      .app-card {
+        padding: 1.2rem;
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Master Bar -->
+  <header class="top-header">
+    <div class="brand-group">
+      <div class="brand-icon">🏡</div>
+      <div>
+        <div class="brand-title">15 Cranleigh</div>
+        <div class="brand-subtitle">Master Home Ecosystem • Raspberry Pi 5</div>
+      </div>
+    </div>
+
+    <div class="system-clock">
+      <div class="clock-time" id="portal-clock">--:--:--</div>
+      <div class="clock-date" id="portal-date">Loading date...</div>
+      <div class="host-badge" id="portal-host-badge">
+        <span class="host-pulse"></span>
+        <span id="host-name-label">CrPi5 Edge Conductor</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Live Telemetry Quick Glancer Strip -->
+  <section class="telemetry-strip">
+    <div class="strip-card">
+      <div class="strip-label">☀️ Solar</div>
+      <div class="strip-val" id="strip-solar" style="color: var(--solar)">-- W</div>
+      <div class="strip-sub" id="strip-solar-sub">PV1 & PV2</div>
+    </div>
+    <div class="strip-card">
+      <div class="strip-label">🔋 Battery</div>
+      <div class="strip-val" id="strip-battery" style="color: var(--battery)">-- %</div>
+      <div class="strip-sub" id="strip-battery-sub">53.2 V</div>
+    </div>
+    <div class="strip-card">
+      <div class="strip-label">⚡ House Load</div>
+      <div class="strip-val" id="strip-load" style="color: var(--load)">-- W</div>
+      <div class="strip-sub" id="strip-load-sub">Essential Bus</div>
+    </div>
+    <div class="strip-card">
+      <div class="strip-label">♨️ Geyser</div>
+      <div class="strip-val" id="strip-geyser" style="color: var(--geyser)">--°C</div>
+      <div class="strip-sub" id="strip-geyser-sub">Thermi Probe</div>
+    </div>
+    <div class="strip-card">
+      <div class="strip-label">🏊 Pool Water</div>
+      <div class="strip-val" id="strip-pool" style="color: var(--pool)">--°C</div>
+      <div class="strip-sub" id="strip-pool-sub">RainPoint RF</div>
+    </div>
+  </section>
+
+  <!-- Application Launcher Hub -->
+  <div class="portal-section-title">
+    <span>📱 Integrated Home Applications</span>
+  </div>
+
+  <main class="app-grid">
+    <!-- 1. Home Energy & Inverter Management -->
+    <a href="/energy" class="app-card" style="--accent-gradient: linear-gradient(90deg, #f59e0b, #eab308);">
+      <div class="app-header">
+        <div class="app-icon-wrap" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">
+          ⚡
+        </div>
+        <span class="app-status-badge badge-live" id="app-badge-energy">LIVE • OPERATIONAL</span>
+      </div>
+      <div>
+        <div class="app-name">Home Energy & SunSynk 8kW</div>
+        <div class="app-desc">
+          Live SunSynk telemetry, battery state-of-charge, grid routing, load analysis, and TOU settings control.
+        </div>
+      </div>
+      <div class="app-footer">
+        <span style="font-size: 0.78rem; color: #cbd5e1;" id="app-sub-energy">SunSynk 8kW • Sonoff Fleet</span>
+        <div class="app-action-btn">
+          Launch App
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </div>
+      </div>
+    </a>
+
+    <!-- 2. Pool Pump & Water Thermometer -->
+    <a href="/energy" class="app-card" style="--accent-gradient: linear-gradient(90deg, #06b6d4, #38bdf8);">
+      <div class="app-header">
+        <div class="app-icon-wrap" style="background: rgba(6, 182, 212, 0.12); color: #06b6d4;">
+          🏊
+        </div>
+        <span class="app-status-badge badge-pool" id="app-badge-pool">27.9°C • STANDBY</span>
+      </div>
+      <div>
+        <div class="app-name">Pool Automation & Thermometer</div>
+        <div class="app-desc">
+          RainPoint floating RF sensor telemetry (water temp, battery, signal) and 1100W contactor pump switch control.
+        </div>
+      </div>
+      <div class="app-footer">
+        <span style="font-size: 0.78rem; color: #cbd5e1;" id="app-sub-pool">RainPoint01 • HCS0528ARF</span>
+        <div class="app-action-btn" style="color: #06b6d4;">
+          Manage Pool
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </div>
+      </div>
+    </a>
+
+    <!-- 3. Geyser Thermi Climate -->
+    <a href="/energy" class="app-card" style="--accent-gradient: linear-gradient(90deg, #ef4444, #f97316);">
+      <div class="app-header">
+        <div class="app-icon-wrap" style="background: rgba(239, 68, 68, 0.12); color: #ef4444;">
+          ♨️
+        </div>
+        <span class="app-status-badge badge-heating" id="app-badge-geyser">56.0°C • STANDBY</span>
+      </div>
+      <div>
+        <div class="app-name">Geyser Thermi Profiler</div>
+        <div class="app-desc">
+          Solar peak heating boost windows, morning comfort booster, safety cutoffs, and secondary DB feed isolation.
+        </div>
+      </div>
+      <div class="app-footer">
+        <span style="font-size: 0.78rem; color: #cbd5e1;" id="app-sub-geyser">Sonoff TH Elite • 3000 W</span>
+        <div class="app-action-btn" style="color: #ef4444;">
+          Configure Geyser
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </div>
+      </div>
+    </a>
+
+    <!-- 4. Smart Irrigation & Garden (Future app) -->
+    <div class="app-card disabled" style="--accent-gradient: linear-gradient(90deg, #10b981, #059669);">
+      <div class="app-header">
+        <div class="app-icon-wrap" style="background: rgba(16, 185, 129, 0.08); color: #10b981;">
+          🌿
+        </div>
+        <span class="app-status-badge badge-roadmap">COMING SOON</span>
+      </div>
+      <div>
+        <div class="app-name">Smart Irrigation & Garden</div>
+        <div class="app-desc">
+          Multi-zone RainPoint valve timers, soil moisture probes, and weather-predicted automated lawn watering.
+        </div>
+      </div>
+      <div class="app-footer">
+        <span style="font-size: 0.78rem; color: #64748b;">RainPoint Hub Compatible</span>
+        <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Module Planned</span>
+      </div>
+    </div>
+
+    <!-- 5. Security & Perimeter Cameras (Future app) -->
+    <div class="app-card disabled" style="--accent-gradient: linear-gradient(90deg, #8b5cf6, #6366f1);">
+      <div class="app-header">
+        <div class="app-icon-wrap" style="background: rgba(139, 92, 246, 0.08); color: #8b5cf6;">
+          🛡️
+        </div>
+        <span class="app-status-badge badge-roadmap">COMING SOON</span>
+      </div>
+      <div>
+        <div class="app-name">Security & Perimeter Access</div>
+        <div class="app-desc">
+          Front gate automation, intercom logging, perimeter sensors, and live camera snapshot feeds.
+        </div>
+      </div>
+      <div class="app-footer">
+        <span style="font-size: 0.78rem; color: #64748b;">Perimeter Integration</span>
+        <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Module Planned</span>
+      </div>
+    </div>
+
+    <!-- 6. Edge System & Network Health -->
+    <div class="app-card" style="--accent-gradient: linear-gradient(90deg, #0ea5e9, #38bdf8);">
+      <div class="app-header">
+        <div class="app-icon-wrap" style="background: rgba(14, 165, 233, 0.12); color: #0ea5e9;">
+          🖥️
+        </div>
+        <span class="app-status-badge badge-live" id="app-badge-sys">ONLINE</span>
+      </div>
+      <div>
+        <div class="app-name">CrPi5 Edge Diagnostics</div>
+        <div class="app-desc">
+          Raspberry Pi 5 quad-core metrics, thermal monitoring, DSI-2 touchscreen status, and local LAN services.
+        </div>
+      </div>
+      <div class="app-footer">
+        <span style="font-size: 0.78rem; color: #cbd5e1;" id="app-sub-sys">Pi 5 4GB • Debian 13</span>
+        <div class="app-action-btn" onclick="alert('CrPi5 Edge Node:\n• IP: 192.168.3.169\n• Host: CrPi5\n• Display: DSI-2 720x1280 Touchscreen\n• Runtime: Python 3.13 venv\n• Service: home-conductor.service')" style="cursor: pointer;">
+          System Info
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Live Clock & Date
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      const dateStr = now.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+      document.getElementById('portal-clock').innerText = timeStr;
+      document.getElementById('portal-date').innerText = dateStr;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Live Telemetry Polling
+    async function fetchPortalTelemetry() {
+      try {
+        const res = await fetch('/api/state');
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        const solar = data.solar?.solar || {};
+        const battery = data.solar?.battery || {};
+        const load = data.solar?.load || {};
+        const geyser = data.sonoff?.geyser || {};
+        const pool = data.sonoff?.pool_pump || {};
+        const rainpoint = data.rainpoint || {};
+        const harness = data.system_harness || {};
+
+        // 1. Solar
+        const sWatts = Math.round(solar.total_watts ?? 0);
+        document.getElementById('strip-solar').innerText = `${sWatts} W`;
+        document.getElementById('strip-solar-sub').innerText = `Today: ${(solar.daily_kwh ?? 0).toFixed(1)} kWh`;
+
+        // 2. Battery
+        const bSoc = Math.round(battery.soc_percent ?? 0);
+        document.getElementById('strip-battery').innerText = `${bSoc} %`;
+        document.getElementById('strip-battery-sub').innerText = `${(battery.voltage ?? 53.2).toFixed(1)} V • ${(battery.watts ?? 0)} W`;
+
+        // 3. Load
+        const lWatts = Math.round(load.total_watts ?? 0);
+        document.getElementById('strip-load').innerText = `${lWatts} W`;
+        document.getElementById('strip-load-sub').innerText = `Today: ${(load.daily_kwh ?? 0).toFixed(1)} kWh`;
+
+        // 4. Geyser
+        if (geyser.temperature_c !== undefined && geyser.temperature_c !== null) {
+          document.getElementById('strip-geyser').innerText = `${geyser.temperature_c.toFixed(1)}°C`;
+          const gState = geyser.state === 'on' ? 'HEATING' : 'STANDBY';
+          document.getElementById('strip-geyser-sub').innerText = `${gState} • ${Math.round(geyser.power_watts ?? 0)} W`;
+          const gBadge = document.getElementById('app-badge-geyser');
+          gBadge.innerText = `${geyser.temperature_c.toFixed(1)}°C • ${gState}`;
+          gBadge.className = `app-status-badge ${geyser.state === 'on' ? 'badge-heating' : 'badge-live'}`;
+        }
+
+        // 5. Pool Water Temp
+        const pTemp = rainpoint.temp_c ?? pool.water_temp_c;
+        if (pTemp !== undefined && pTemp !== null) {
+          document.getElementById('strip-pool').innerText = `${pTemp.toFixed(1)}°C`;
+          const pState = pool.state === 'on' ? 'RUNNING' : 'STANDBY';
+          document.getElementById('strip-pool-sub').innerText = `${(rainpoint.temp_f ?? 82).toFixed(1)}°F • ${pState}`;
+          const pBadge = document.getElementById('app-badge-pool');
+          pBadge.innerText = `${pTemp.toFixed(1)}°C • ${pState}`;
+          pBadge.className = `app-status-badge badge-pool`;
+        }
+
+        // Edge Harness
+        if (harness.host_mode) {
+          document.getElementById('host-name-label').innerText = `${harness.node || 'CrPi5'} (${harness.host_mode.split(' ')[0]})`;
+        }
+
+        // Energy App Card Subtitle
+        document.getElementById('app-sub-energy').innerText = `PV: ${sWatts} W | SOC: ${bSoc}% | Load: ${lWatts} W`;
+
+      } catch (e) {
+        console.warn('Telemetry poll error:', e);
+      }
+    }
+
+    setInterval(fetchPortalTelemetry, 3000);
+    fetchPortalTelemetry();
+  </script>
+</body>
+</html>
