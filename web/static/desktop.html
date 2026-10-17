@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cranleigh OS • Raspberry Pi 5 Master Desktop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070b14;
+      --taskbar-bg: rgba(13, 20, 36, 0.88);
+      --card-bg: rgba(18, 26, 46, 0.82);
+      --card-hover: rgba(28, 40, 70, 0.95);
+      --border: rgba(255, 255, 255, 0.09);
+      --border-glow: rgba(56, 189, 248, 0.35);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --solar: #f59e0b;
+      --battery: #10b981;
+      --grid: #8b5cf6;
+      --load: #38bdf8;
+      --geyser: #ef4444;
+      --pool: #06b6d4;
+      --accent: #38bdf8;
+      --taskbar-height: 52px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: var(--bg);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      touch-action: none;
+    }
+
+    /* Windows 11 Desktop Wallpaper Surface */
+    #desktop-surface {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: var(--taskbar-height);
+      background: 
+        radial-gradient(circle at 15% 20%, rgba(56, 189, 248, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 25%, rgba(245, 158, 11, 0.10) 0%, transparent 40%),
+        radial-gradient(circle at 50% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
+        linear-gradient(135deg, #090e1a 0%, #0d1527 50%, #080c16 100%);
+      overflow: hidden;
+    }
+
+    /* Desktop Icons Grid */
+    .desktop-grid {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(auto-fill, 96px);
+      gap: 16px 20px;
+      z-index: 10;
+    }
+
+    .desktop-icon {
+      width: 88px;
+      height: 92px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      touch-action: manipulation;
+      text-align: center;
+      padding: 6px 4px;
+    }
+
+    .desktop-icon:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.14);
+      transform: translateY(-2px);
+    }
+
+    .desktop-icon:active {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: var(--border-glow);
+      transform: scale(0.96);
+    }
+
+    .icon-symbol {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.7rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      transition: all 0.2s ease;
+    }
+
+    .desktop-icon:hover .icon-symbol {
+      box-shadow: 0 6px 18px rgba(56, 189, 248, 0.35);
+      border-color: var(--accent);
+    }
+
+    .icon-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+      line-height: 1.2;
+      max-width: 82px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Live Desktop Telemetry & Pi Status Widget (Top Right) */
+    .desktop-widget {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 16px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 10;
+      min-width: 280px;
+    }
+
+    .widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 6px;
+    }
+
+    .widget-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .widget-item {
+      display: flex;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 6px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .widget-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .widget-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    /* Windows Container */
+    #window-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: var(--taskbar-height);
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 20;
+    }
+
+    /* Window Style */
+    .app-window {
+      position: absolute;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65), 0 0 24px rgba(56, 189, 248, 0.12);
+      display: flex;
+      flex-direction: column;
+      pointer-events: auto;
+      overflow: hidden;
+      transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s;
+      min-width: 320px;
+      min-height: 220px;
+    }
+
+    .app-window.focused {
+      border-color: rgba(56, 189, 248, 0.45);
+      box-shadow: 0 20px 56px rgba(0, 0, 0, 0.75), 0 0 32px rgba(56, 189, 248, 0.25);
+    }
+
+    .app-window.minimized {
+      transform: scale(0.8) translateY(120px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .app-window.maximized {
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      border-radius: 0 !important;
+      border: none !important;
+    }
+
+    /* Window Header / Title Bar */
+    .window-header {
+      height: 40px;
+      background: rgba(18, 27, 48, 0.92);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 10px 0 14px;
+      cursor: move;
+      touch-action: none;
+      flex-shrink: 0;
+    }
+
+    .window-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      pointer-events: none;
+    }
+
+    .window-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .win-btn {
+      width: 30px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+    }
+
+    .win-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+    }
+
+    .win-btn.btn-close:hover {
+      background: #ef4444;
+      color: #ffffff;
+    }
+
+    /* Window Body & Embedded Content */
+    .window-body {
+      flex-grow: 1;
+      width: 100%;
+      height: calc(100% - 40px);
+      position: relative;
+      background: #090e1a;
+      overflow: hidden;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .window-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #090e1a;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Window Resizer Handle (bottom-right) */
+    .window-resizer {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 18px;
+      height: 18px;
+      cursor: se-resize;
+      touch-action: none;
+      z-index: 10;
+    }
+
+    .window-resizer::after {
+      content: '';
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 6px;
+      height: 6px;
+      border-right: 2px solid rgba(255, 255, 255, 0.3);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Windows 11 Taskbar */
+    #taskbar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--taskbar-height);
+      background: var(--taskbar-bg);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(24px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 10px;
+      z-index: 1000;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Taskbar Left & Center: Start + App Tabs */
+    .taskbar-main {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 100%;
+    }
+
+    /* Windows 11 Glowing Start Button */
+    #start-btn {
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: #ffffff;
+      font-size: 0.88rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      touch-action: manipulation;
+    }
+
+    #start-btn:hover, #start-btn.active {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: rgba(56, 189, 248, 0.45);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+    }
+
+    .start-logo {
+      display: grid;
+      grid-template-columns: repeat(2, 7px);
+      grid-template-rows: repeat(2, 7px);
+      gap: 2.5px;
+    }
+
+    .start-tile {
+      border-radius: 1.5px;
+      background: #38bdf8;
+      box-shadow: 0 0 4px rgba(56, 189, 248, 0.6);
+    }
+
+    .start-tile:nth-child(1) { background: #38bdf8; }
+    .start-tile:nth-child(2) { background: #06b6d4; }
+    .start-tile:nth-child(3) { background: #f59e0b; }
+    .start-tile:nth-child(4) { background: #10b981; }
+
+    /* Taskbar Running App Tabs */
+    #taskbar-apps {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+      overflow-x: auto;
+    }
+
+    .taskbar-tab {
+      height: 40px;
+      min-width: 44px;
+      padding: 0 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid transparent;
+      color: #e2e8f0;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      touch-action: manipulation;
+    }
+
+    .taskbar-tab:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .taskbar-tab.active {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+    }
+
+    .taskbar-tab::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 12px;
+      right: 12px;
+      height: 3px;
+      border-radius: 2px;
+      background: #38bdf8;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .taskbar-tab.active::after {
+      opacity: 1;
+    }
+
+    .taskbar-tab.minimized::after {
+      opacity: 0.4;
+      background: #94a3b8;
+    }
+
+    /* System Tray (Taskbar Right) */
+    .system-tray {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 100%;
+    }
+
+    .tray-pill {
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .tray-pill:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: #ffffff;
+    }
+
+    .tray-telemetry-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .tray-clock {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 6px;
+      cursor: pointer;
+    }
+
+    .tray-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      line-height: 1.1;
+    }
+
+    .tray-date {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Show Desktop Sliver */
+    .show-desktop-btn {
+      width: 8px;
+      height: 36px;
+      border-radius: 3px;
+      background: transparent;
+      border-left: 1px solid rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+    }
+
+    .show-desktop-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Windows 11 Start Menu */
+    #start-menu {
+      position: absolute;
+      bottom: calc(var(--taskbar-height) + 10px);
+      left: 12px;
+      width: 440px;
+      max-height: 540px;
+      background: rgba(15, 23, 42, 0.94);
+      border: 1px solid var(--border-glow);
+      border-radius: 16px;
+      backdrop-filter: blur(28px);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7), 0 0 32px rgba(56, 189, 248, 0.18);
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateY(20px) scale(0.96);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #start-menu.open {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .start-search-wrap {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .start-search {
+      width: 100%;
+      height: 38px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 0 12px;
+      color: #ffffff;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .start-search:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .start-content {
+      padding: 14px 16px;
+      overflow-y: auto;
+      max-height: 380px;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .start-section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .start-apps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .start-app-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 6px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.18s;
+      touch-action: manipulation;
+    }
+
+    .start-app-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .start-app-item:active {
+      transform: scale(0.96);
+    }
+
+    .start-app-icon {
+      font-size: 1.6rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .start-app-name {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      line-height: 1.2;
+    }
+
+    .start-quick-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .start-action-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      transition: all 0.15s;
+    }
+
+    .start-action-row:hover {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+    }
+
+    /* Start Menu Bottom User & Power Bar */
+    .start-footer {
+      margin-top: auto;
+      padding: 10px 16px;
+      background: rgba(10, 16, 30, 0.8);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .start-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .start-power-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.05);
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+
+    .start-power-btn:hover {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+
+    /* Context Menu */
+    #context-menu {
+      position: absolute;
+      background: rgba(18, 27, 48, 0.95);
+      border: 1px solid var(--border-glow);
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(20px);
+      z-index: 2000;
+      display: none;
+      min-width: 180px;
+    }
+
+    .context-item {
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s;
+    }
+
+    .context-item:hover {
+      background: rgba(56, 189, 248, 0.16);
+      color: #38bdf8;
+    }
+
+    /* Scrollbars touch friendly */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Desktop Surface Area -->
+  <div id="desktop-surface" onclick="onDesktopClick(event)" oncontextmenu="openContextMenu(event)">
+    
+    <!-- Desktop Icons Grid -->
+    <div class="desktop-grid" id="desktop-icons">
+      <!-- Icons populated dynamically by JS -->
+    </div>
+
+    <!-- Live Telemetry Quick Glancer Widget (Top Right) -->
+    <div class="desktop-widget">
+      <div class="widget-header">
+        <span>⚡ 15 Cranleigh Telemetry</span>
+        <span id="widget-ip" style="color: #38bdf8;">192.168.3.169</span>
+      </div>
+      <div class="widget-grid">
+        <div class="widget-item">
+          <span class="widget-label">☀️ Solar</span>
+          <span class="widget-value" id="dw-solar" style="color: var(--solar);">-- W</span>
+        </div>
+        <div class="widget-item">
+          <span class="widget-label">🔋 Battery</span>
+          <span class="widget-value" id="dw-battery" style="color: var(--battery);">-- %</span>
+        </div>
+        <div class="widget-item">
+          <span class="widget-label">⚡ Load</span>
+          <span class="widget-value" id="dw-load" style="color: var(--load);">-- W</span>
+        </div>
+        <div class="widget-item">
+          <span class="widget-label">♨️ Geyser</span>
+          <span class="widget-value" id="dw-geyser" style="color: var(--geyser);">--°C</span>
+        </div>
+        <div class="widget-item">
+          <span class="widget-label">🏊 Pool</span>
+          <span class="widget-value" id="dw-pool" style="color: var(--pool);">--°C</span>
+        </div>
+        <div class="widget-item">
+          <span class="widget-label">🖥️ Pi Temp</span>
+          <span class="widget-value" id="dw-temp" style="color: #38bdf8;">--°C</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Windows Container (Hosts active app windows) -->
+  <div id="window-container"></div>
+
+  <!-- Windows 11 Taskbar -->
+  <footer id="taskbar">
+    <div class="taskbar-main">
+      <!-- Windows 11 Start Button -->
+      <button id="start-btn" onclick="toggleStartMenu(event)" title="Start Menu">
+        <div class="start-logo">
+          <div class="start-tile"></div>
+          <div class="start-tile"></div>
+          <div class="start-tile"></div>
+          <div class="start-tile"></div>
+        </div>
+        <span>Start</span>
+      </button>
+
+      <!-- Taskbar App Tabs -->
+      <div id="taskbar-apps"></div>
+    </div>
+
+    <!-- System Tray -->
+    <div class="system-tray">
+      <!-- Mini Telemetry Pill -->
+      <div class="tray-pill" onclick="launchApp('energy')" title="Quick View Inverter State">
+        <span>☀️ <span class="tray-telemetry-val" id="tray-solar">--W</span></span>
+        <span>•</span>
+        <span>🔋 <span class="tray-telemetry-val" id="tray-batt">--%</span></span>
+      </div>
+
+      <!-- Pi Thermal & Fullscreen -->
+      <div class="tray-pill" id="tray-fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">
+        <span id="tray-temp">🌡️ 44°C</span>
+        <span>⛶</span>
+      </div>
+
+      <!-- Clock & Date -->
+      <div class="tray-clock" onclick="toggleStartMenu(event)" title="System Clock">
+        <div class="tray-time" id="clock-time">--:--</div>
+        <div class="tray-date" id="clock-date">---, --- --</div>
+      </div>
+
+      <!-- Show Desktop Line -->
+      <div class="show-desktop-btn" onclick="minimizeAllWindows()" title="Show Desktop"></div>
+    </div>
+  </footer>
+
+  <!-- Windows 11 Start Menu -->
+  <div id="start-menu" onclick="event.stopPropagation()">
+    <div class="start-search-wrap">
+      <input type="text" id="start-search-input" class="start-search" placeholder="Type here to search apps..." oninput="filterStartApps(this.value)">
+    </div>
+
+    <div class="start-content">
+      <div class="start-section-title">
+        <span>Pinned Applications</span>
+        <span id="installed-count" style="color: var(--accent); font-size: 0.7rem;">5 Apps</span>
+      </div>
+
+      <!-- Start Apps Grid -->
+      <div class="start-apps-grid" id="start-apps-list">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="start-section-title">
+        <span>Quick Management</span>
+      </div>
+
+      <div class="start-quick-actions">
+        <div class="start-action-row" onclick="launchApp('github_hub'); closeStartMenu();">
+          <span>🐙</span>
+          <span>GitHub App Hub & Installer</span>
+        </div>
+        <div class="start-action-row" onclick="launchApp('system_diag'); closeStartMenu();">
+          <span>🖥️</span>
+          <span>Pi 5 System Diagnostics</span>
+        </div>
+        <div class="start-action-row" onclick="reloadConductorConfig();">
+          <span>🔄</span>
+          <span>Reload Conductor Configuration</span>
+        </div>
+        <div class="start-action-row" onclick="toggleFullscreen(); closeStartMenu();">
+          <span>⛶</span>
+          <span>Toggle Touch Fullscreen</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Start Menu Footer -->
+    <div class="start-footer">
+      <div class="start-user">
+        <span style="font-size: 1.1rem;">🏡</span>
+        <div>
+          <div>15 Cranleigh Host</div>
+          <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: normal;">Raspberry Pi 5 Conductor</div>
+        </div>
+      </div>
+      <button class="start-power-btn" onclick="openPowerMenu()" title="Power Options">
+        ⏻
+      </button>
+    </div>
+  </div>
+
+  <!-- Desktop Context Menu -->
+  <div id="context-menu" onclick="event.stopPropagation()">
+    <div class="context-item" onclick="launchApp('github_hub'); closeContextMenu();">
+      <span>🐙</span>
+      <span>Add App from GitHub...</span>
+    </div>
+    <div class="context-item" onclick="launchApp('energy'); closeContextMenu();">
+      <span>⚡</span>
+      <span>Open Energy Inverter</span>
+    </div>
+    <div class="context-item" onclick="launchApp('system_diag'); closeContextMenu();">
+      <span>🖥️</span>
+      <span>System Diagnostics</span>
+    </div>
+    <div class="context-item" onclick="minimizeAllWindows(); closeContextMenu();">
+      <span>🗗</span>
+      <span>Show Desktop</span>
+    </div>
+    <div class="context-item" onclick="toggleFullscreen(); closeContextMenu();">
+      <span>⛶</span>
+      <span>Toggle Fullscreen</span>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // State & Registry
+    // -------------------------------------------------------------
+    let installedApps = [];
+    let openWindows = {}; // app_id -> { el, tabEl, isMinimized, isMaximized, x, y, w, h }
+    let topZIndex = 100;
+    let isDragging = false;
+    let isResizing = false;
+    let dragTarget = null;
+    let dragStartX = 0, dragStartY = 0;
+    let initialWinX = 0, initialWinY = 0;
+    let initialWinW = 0, initialWinH = 0;
+
+    // Load Apps from backend API
+    async function loadApps() {
+      try {
+        const res = await fetch('/api/apps');
+        const data = await res.json();
+        installedApps = data.apps || [];
+        renderDesktopIcons();
+        renderStartMenuApps();
+      } catch (err) {
+        console.error('Failed to load apps:', err);
+      }
+    }
+
+    // Render Desktop Icons
+    function renderDesktopIcons() {
+      const container = document.getElementById('desktop-icons');
+      container.innerHTML = '';
+
+      installedApps.forEach(app => {
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'desktop-icon';
+        iconDiv.title = app.description || app.name;
+        iconDiv.innerHTML = `
+          <div class="icon-symbol">${app.icon || '📦'}</div>
+          <div class="icon-label">${app.name}</div>
+        `;
+        iconDiv.onclick = (e) => {
+          e.stopPropagation();
+          launchApp(app.id);
+        };
+        container.appendChild(iconDiv);
+      });
+
+      // Also add '+ Add App' shortcut
+      const addDiv = document.createElement('div');
+      addDiv.className = 'desktop-icon';
+      addDiv.title = 'Install or clone an application from GitHub';
+      addDiv.innerHTML = `
+        <div class="icon-symbol" style="border-style: dashed; border-color: rgba(56,189,248,0.5); color: #38bdf8;">➕</div>
+        <div class="icon-label">Add App</div>
+      `;
+      addDiv.onclick = (e) => {
+        e.stopPropagation();
+        launchApp('github_hub');
+      };
+      container.appendChild(addDiv);
+    }
+
+    // Render Start Menu Apps
+    function renderStartMenuApps(filterText = '') {
+      const container = document.getElementById('start-apps-list');
+      container.innerHTML = '';
+      const filter = filterText.toLowerCase();
+
+      const filtered = installedApps.filter(a => a.name.toLowerCase().includes(filter));
+      document.getElementById('installed-count').innerText = `${filtered.length} Apps`;
+
+      filtered.forEach(app => {
+        const item = document.createElement('div');
+        item.className = 'start-app-item';
+        item.innerHTML = `
+          <div class="start-app-icon">${app.icon || '📦'}</div>
+          <div class="start-app-name">${app.name}</div>
+        `;
+        item.onclick = () => {
+          launchApp(app.id);
+          closeStartMenu();
+        };
+        container.appendChild(item);
+      });
+    }
+
+    function filterStartApps(text) {
+      renderStartMenuApps(text);
+    }
+
+    // -------------------------------------------------------------
+    // Window Management System (Hybrid Windows + Maximize)
+    // -------------------------------------------------------------
+    function launchApp(appId) {
+      // If already open, restore/focus it
+      if (openWindows[appId]) {
+        const winData = openWindows[appId];
+        if (winData.isMinimized) {
+          restoreWindow(appId);
+        } else {
+          focusWindow(appId);
+        }
+        return;
+      }
+
+      const app = installedApps.find(a => a.id === appId);
+      if (!app) return;
+
+      topZIndex++;
+
+      // Create Window Element
+      const win = document.createElement('div');
+      win.className = 'app-window focused';
+      win.id = `window-${appId}`;
+      win.style.zIndex = topZIndex;
+
+      // Window Dimensions & Positioning
+      const desktop = document.getElementById('desktop-surface');
+      const dWidth = desktop.clientWidth;
+      const dHeight = desktop.clientHeight;
+
+      const targetW = Math.min(app.width || 960, dWidth - 20);
+      const targetH = Math.min(app.height || 620, dHeight - 20);
+
+      // Offset windows so they cascade
+      const offset = (Object.keys(openWindows).length * 28) % 120;
+      const posX = Math.max(10, Math.round((dWidth - targetW) / 2) + offset);
+      const posY = Math.max(10, Math.round((dHeight - targetH) / 2) + offset);
+
+      win.style.width = `${targetW}px`;
+      win.style.height = `${targetH}px`;
+      win.style.left = `${posX}px`;
+      win.style.top = `${posY}px`;
+
+      // Window Header
+      win.innerHTML = `
+        <div class="window-header" onmousedown="startDrag(event, '${appId}')" ontouchstart="startDrag(event, '${appId}')">
+          <div class="window-title-wrap">
+            <span>${app.icon || '📦'}</span>
+            <span>${app.name}</span>
+          </div>
+          <div class="window-controls">
+            <button class="win-btn" onclick="reloadAppFrame('${appId}')" title="Refresh">🔄</button>
+            <button class="win-btn" onclick="minimizeWindow('${appId}')" title="Minimize">_</button>
+            <button class="win-btn" id="max-btn-${appId}" onclick="toggleMaximizeWindow('${appId}')" title="Maximize">🗖</button>
+            <button class="win-btn btn-close" onclick="closeWindow('${appId}')" title="Close">✕</button>
+          </div>
+        </div>
+        <div class="window-body">
+          <iframe class="window-iframe" id="iframe-${appId}" src="${app.url}" allow="fullscreen"></iframe>
+          <div class="window-resizer" onmousedown="startResize(event, '${appId}')" ontouchstart="startResize(event, '${appId}')"></div>
+        </div>
+      `;
+
+      win.onmousedown = () => focusWindow(appId);
+      win.ontouchstart = () => focusWindow(appId);
+
+      document.getElementById('window-container').appendChild(win);
+
+      // Create Taskbar Tab
+      const tab = document.createElement('div');
+      tab.className = 'taskbar-tab active';
+      tab.id = `tab-${appId}`;
+      tab.innerHTML = `<span>${app.icon || '📦'}</span><span>${app.name}</span>`;
+      tab.onclick = () => onTaskbarTabClick(appId);
+      document.getElementById('taskbar-apps').appendChild(tab);
+
+      // Track window state
+      openWindows[appId] = {
+        el: win,
+        tabEl: tab,
+        isMinimized: false,
+        isMaximized: false,
+        prevX: posX,
+        prevY: posY,
+        prevW: targetW,
+        prevH: targetH
+      };
+
+      // If default maximized, maximize it immediately
+      if (app.default_maximized) {
+        toggleMaximizeWindow(appId);
+      }
+    }
+
+    function focusWindow(appId) {
+      topZIndex++;
+      Object.keys(openWindows).forEach(id => {
+        const item = openWindows[id];
+        if (id === appId) {
+          item.el.classList.add('focused');
+          item.el.style.zIndex = topZIndex;
+          item.tabEl.classList.add('active');
+        } else {
+          item.el.classList.remove('focused');
+          item.tabEl.classList.remove('active');
+        }
+      });
+    }
+
+    function minimizeWindow(appId) {
+      const item = openWindows[appId];
+      if (!item) return;
+      item.isMinimized = true;
+      item.el.classList.add('minimized');
+      item.tabEl.classList.remove('active');
+      item.tabEl.classList.add('minimized');
+    }
+
+    function restoreWindow(appId) {
+      const item = openWindows[appId];
+      if (!item) return;
+      item.isMinimized = false;
+      item.el.classList.remove('minimized');
+      item.tabEl.classList.remove('minimized');
+      focusWindow(appId);
+    }
+
+    function toggleMaximizeWindow(appId) {
+      const item = openWindows[appId];
+      if (!item) return;
+      const btn = document.getElementById(`max-btn-${appId}`);
+
+      if (item.isMaximized) {
+        // Restore
+        item.isMaximized = false;
+        item.el.classList.remove('maximized');
+        item.el.style.left = `${item.prevX}px`;
+        item.el.style.top = `${item.prevY}px`;
+        item.el.style.width = `${item.prevW}px`;
+        item.el.style.height = `${item.prevH}px`;
+        if (btn) btn.innerHTML = '🗖';
+      } else {
+        // Maximize
+        item.prevX = parseInt(item.el.style.left) || 20;
+        item.prevY = parseInt(item.el.style.top) || 20;
+        item.prevW = parseInt(item.el.style.width) || 800;
+        item.prevH = parseInt(item.el.style.height) || 500;
+        item.isMaximized = true;
+        item.el.classList.add('maximized');
+        if (btn) btn.innerHTML = '🗗';
+      }
+      focusWindow(appId);
+    }
+
+    function closeWindow(appId) {
+      const item = openWindows[appId];
+      if (!item) return;
+      item.el.remove();
+      item.tabEl.remove();
+      delete openWindows[appId];
+    }
+
+    function onTaskbarTabClick(appId) {
+      const item = openWindows[appId];
+      if (!item) return;
+      if (item.isMinimized) {
+        restoreWindow(appId);
+      } else if (item.el.classList.contains('focused')) {
+        minimizeWindow(appId);
+      } else {
+        focusWindow(appId);
+      }
+    }
+
+    function minimizeAllWindows() {
+      Object.keys(openWindows).forEach(id => {
+        minimizeWindow(id);
+      });
+    }
+
+    function reloadAppFrame(appId) {
+      const iframe = document.getElementById(`iframe-${appId}`);
+      if (iframe) {
+        iframe.src = iframe.src;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Touch & Mouse Window Drag / Resize
+    // -------------------------------------------------------------
+    function getPointerPos(e) {
+      if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      return { x: e.clientX, y: e.clientY };
+    }
+
+    function startDrag(e, appId) {
+      const item = openWindows[appId];
+      if (!item || item.isMaximized) return;
+
+      isDragging = true;
+      dragTarget = item.el;
+      focusWindow(appId);
+
+      const pos = getPointerPos(e);
+      dragStartX = pos.x;
+      dragStartY = pos.y;
+      initialWinX = parseInt(item.el.style.left) || 0;
+      initialWinY = parseInt(item.el.style.top) || 0;
+
+      document.addEventListener('mousemove', onDragMove);
+      document.addEventListener('mouseup', onDragEnd);
+      document.addEventListener('touchmove', onDragMove, { passive: false });
+      document.addEventListener('touchend', onDragEnd);
+    }
+
+    function onDragMove(e) {
+      if (!isDragging || !dragTarget) return;
+      e.preventDefault();
+      const pos = getPointerPos(e);
+      const deltaX = pos.x - dragStartX;
+      const deltaY = pos.y - dragStartY;
+
+      let newX = initialWinX + deltaX;
+      let newY = initialWinY + deltaY;
+
+      // Restrict within bounds
+      newY = Math.max(0, newY);
+
+      dragTarget.style.left = `${newX}px`;
+      dragTarget.style.top = `${newY}px`;
+    }
+
+    function onDragEnd() {
+      isDragging = false;
+      dragTarget = null;
+      document.removeEventListener('mousemove', onDragMove);
+      document.removeEventListener('mouseup', onDragEnd);
+      document.removeEventListener('touchmove', onDragMove);
+      document.removeEventListener('touchend', onDragEnd);
+    }
+
+    function startResize(e, appId) {
+      e.stopPropagation();
+      const item = openWindows[appId];
+      if (!item || item.isMaximized) return;
+
+      isResizing = true;
+      dragTarget = item.el;
+      focusWindow(appId);
+
+      const pos = getPointerPos(e);
+      dragStartX = pos.x;
+      dragStartY = pos.y;
+      initialWinW = dragTarget.clientWidth;
+      initialWinH = dragTarget.clientHeight;
+
+      document.addEventListener('mousemove', onResizeMove);
+      document.addEventListener('mouseup', onResizeEnd);
+      document.addEventListener('touchmove', onResizeMove, { passive: false });
+      document.addEventListener('touchend', onResizeEnd);
+    }
+
+    function onResizeMove(e) {
+      if (!isResizing || !dragTarget) return;
+      e.preventDefault();
+      const pos = getPointerPos(e);
+      const deltaX = pos.x - dragStartX;
+      const deltaY = pos.y - dragStartY;
+
+      const newW = Math.max(340, initialWinW + deltaX);
+      const newH = Math.max(220, initialWinH + deltaY);
+
+      dragTarget.style.width = `${newW}px`;
+      dragTarget.style.height = `${newH}px`;
+    }
+
+    function onResizeEnd() {
+      isResizing = false;
+      dragTarget = null;
+      document.removeEventListener('mousemove', onResizeMove);
+      document.removeEventListener('mouseup', onResizeEnd);
+      document.removeEventListener('touchmove', onResizeMove);
+      document.removeEventListener('touchend', onResizeEnd);
+    }
+
+    // -------------------------------------------------------------
+    // Start Menu & Desktop UI Controls
+    // -------------------------------------------------------------
+    function toggleStartMenu(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('start-menu');
+      const btn = document.getElementById('start-btn');
+      const isOpen = menu.classList.contains('open');
+
+      if (isOpen) {
+        closeStartMenu();
+      } else {
+        menu.classList.add('open');
+        btn.classList.add('active');
+        closeContextMenu();
+        const input = document.getElementById('start-search-input');
+        if (input) {
+          input.value = '';
+          renderStartMenuApps('');
+        }
+      }
+    }
+
+    function closeStartMenu() {
+      const menu = document.getElementById('start-menu');
+      const btn = document.getElementById('start-btn');
+      menu.classList.remove('open');
+      btn.classList.remove('active');
+    }
+
+    function onDesktopClick(e) {
+      closeStartMenu();
+      closeContextMenu();
+    }
+
+    function openContextMenu(e) {
+      e.preventDefault();
+      const menu = document.getElementById('context-menu');
+      const x = Math.min(e.clientX, window.innerWidth - 190);
+      const y = Math.min(e.clientY, window.innerHeight - 200);
+      menu.style.left = `${x}px`;
+      menu.style.top = `${y}px`;
+      menu.style.display = 'block';
+      closeStartMenu();
+    }
+
+    function closeContextMenu() {
+      const menu = document.getElementById('context-menu');
+      menu.style.display = 'none';
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn('Fullscreen request failed:', err.message);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    function openPowerMenu() {
+      if (confirm("System Action:\nDo you want to reload the Home Conductor Service?")) {
+        reloadConductorConfig();
+      }
+    }
+
+    async function reloadConductorConfig() {
+      try {
+        const res = await fetch('/api/reload', { method: 'POST' });
+        const data = await res.json();
+        alert('Conductor Reloaded: ' + (data.message || 'Success'));
+      } catch (err) {
+        alert('Failed to reload conductor: ' + err.message);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Live Telemetry & Pi System Polling
+    // -------------------------------------------------------------
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      const dateStr = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+      document.getElementById('clock-time').innerText = timeStr;
+      document.getElementById('clock-date').innerText = dateStr;
+    }
+
+    async function pollLiveTelemetry() {
+      try {
+        const res = await fetch('/api/state');
+        if (!res.ok) return;
+        const state = await res.json();
+
+        // Inverter Solar & Battery
+        const pvWatts = state.sunsynk?.pv_watts ?? 0;
+        const battSoc = state.sunsynk?.battery_soc ?? 0;
+        const loadWatts = state.sunsynk?.load_watts ?? 0;
+        const geyserTemp = state.sonoff?.geyser?.temperature_c ?? '--';
+        const poolTemp = state.rainpoint?.pool?.water_temp_c ?? '--';
+
+        // Update Desktop Widget
+        document.getElementById('dw-solar').innerText = `${pvWatts} W`;
+        document.getElementById('dw-battery').innerText = `${battSoc} %`;
+        document.getElementById('dw-load').innerText = `${loadWatts} W`;
+        document.getElementById('dw-geyser').innerText = `${geyserTemp}°C`;
+        document.getElementById('dw-pool').innerText = `${poolTemp}°C`;
+
+        // Update Taskbar System Tray
+        document.getElementById('tray-solar').innerText = `${pvWatts}W`;
+        document.getElementById('tray-batt').innerText = `${battSoc}%`;
+      } catch (e) {
+        // quiet error on dev
+      }
+    }
+
+    async function pollSystemMetrics() {
+      try {
+        const res = await fetch('/api/system/metrics');
+        if (!res.ok) return;
+        const m = await res.json();
+        if (m.temp_c !== undefined) {
+          document.getElementById('dw-temp').innerText = `${m.temp_c}°C`;
+          document.getElementById('tray-temp').innerText = `🌡️ ${m.temp_c}°C`;
+        }
+        if (m.ip_address) {
+          document.getElementById('widget-ip').innerText = m.ip_address;
+        }
+      } catch (e) {}
+    }
+
+    // -------------------------------------------------------------
+    // Boot Initialization
+    // -------------------------------------------------------------
+    window.onload = async () => {
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      await loadApps();
+      await pollLiveTelemetry();
+      await pollSystemMetrics();
+
+      setInterval(pollLiveTelemetry, 3000);
+      setInterval(pollSystemMetrics, 10000);
+
+      // Auto-launch the Home Energy app maximized upon boot
+      launchApp('energy');
+    };
+  </script>
+</body>
+</html>

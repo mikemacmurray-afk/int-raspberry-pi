@@ -1,0 +1,13 @@
+{
+  "id": "garden_irrigation",
+  "name": "Garden Irrigation",
+  "icon": "\ud83c\udf3f",
+  "category": "Outdoor",
+  "type": "static",
+  "url": "/apps/hosted/garden_irrigation/index.html",
+  "description": "Garden Irrigation module for Cranleigh OS",
+  "default_maximized": false,
+  "is_system": false,
+  "width": 920,
+  "height": 580
+}

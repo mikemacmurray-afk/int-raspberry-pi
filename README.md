@@ -103,7 +103,34 @@ sonoff_geyser_backup:
 
 ---
 
-## Deploying to Raspberry Pi 5 Later
+## Cranleigh OS: Windows 11 Desktop Environment & Multi-App Host
+
+The system features **Cranleigh OS**, a Windows 11-style web desktop environment optimized for Raspberry Pi 5 touchscreen (1280x720 landscape):
+
+1. **Hybrid Window Manager**:
+   - Apps launch in draggable, resizable windows or can maximize to full-screen with 1-tap.
+   - Titlebar with Minimize (`_`), Maximize (`🗖`), and Close (`✕`) buttons.
+   - Active focus z-index management.
+2. **Windows 11 Taskbar & Start Menu**:
+   - **Start Button** & Start Menu with app search, pinned apps, and system actions.
+   - **Running App Tabs** with active indicator line and minimize/restore toggling.
+   - **System Tray**: Live telemetry pills (`☀️ 3.2kW | 🔋 88%`), thermal status (`🌡️ 44°C`), clock, and Show Desktop sliver.
+3. **Touch Scrolling & Navigation**:
+   - Explicit `touch-action: pan-y`, `-webkit-overflow-scrolling: touch`, and custom high-contrast scrollbars.
+   - Kinetic touch drag-scroll fallback handler for Raspberry Pi touchscreens.
+   - Floating Quick-Scroll buttons (`▲` Top / `▼` Down) on touchscreen views.
+   - Persistent `⊞ Desktop` and `🐙 App Hub` navigation buttons so users are never trapped in a single app.
+4. **GitHub App Hub & Multi-App Installer**:
+   - Clone any GitHub repository and pin it directly to the Windows Desktop.
+   - Supports:
+     - **Static Web Apps**: HTML/JS/CSS served directly from `apps/<slug>/`.
+     - **Microservices**: Local services running on custom ports (e.g. 3000, 8080) with reverse proxy.
+     - **1-Click Home Services**: Pre-configured shortcuts for Home Assistant, Portainer, Grafana, Node-RED.
+   - Built-in `git pull` update manager and process start/stop controls.
+
+---
+
+## Deploying to Raspberry Pi 5
 
 1. Clone this repository onto your Raspberry Pi 5:
    ```bash
@@ -118,3 +145,4 @@ sonoff_geyser_backup:
    ```bash
    python main.py
    ```
+   Open **`http://localhost:8000`** (or Pi LAN IP `http://192.168.3.169:8000`) in Chromium.

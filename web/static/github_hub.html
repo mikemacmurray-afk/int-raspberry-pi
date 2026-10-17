@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub App Hub & Installer • Cranleigh OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090e1a;
+      --card-bg: rgba(18, 26, 46, 0.82);
+      --card-hover: rgba(26, 38, 64, 0.95);
+      --border: rgba(255, 255, 255, 0.09);
+      --border-glow: rgba(56, 189, 248, 0.35);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding: 1.25rem;
+      overflow-y: auto;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .hub-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .brand-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .hub-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .hub-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Form Inputs */
+    .form-group {
+      margin-bottom: 0.85rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(10, 16, 28, 0.8);
+      color: #ffffff;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    /* Icon Picker */
+    .icon-picker-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .icon-choice {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .icon-choice:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--accent);
+    }
+
+    .icon-choice.selected {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    /* Submit Button */
+    .btn-submit {
+      width: 100%;
+      height: 42px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #0284c7, #06b6d4);
+      color: #ffffff;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      margin-top: 1rem;
+      touch-action: manipulation;
+    }
+
+    .btn-submit:hover {
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.98);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* App Cards in List */
+    .app-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-height: 440px;
+      overflow-y: auto;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 4px;
+    }
+
+    .app-card {
+      background: rgba(10, 16, 28, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .app-card:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      background: rgba(18, 27, 46, 0.8);
+    }
+
+    .app-info-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .app-card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+
+    .app-card-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .app-card-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .app-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .action-btn {
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      touch-action: manipulation;
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+
+    .action-btn.btn-delete:hover {
+      background: #ef4444;
+      border-color: #ef4444;
+      color: #ffffff;
+    }
+
+    /* Template Cards (1-Click) */
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.85rem;
+    }
+
+    .template-card {
+      background: rgba(10, 16, 28, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 0.6rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .template-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .template-top {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .template-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* Status Banner / Log */
+    #status-banner {
+      display: none;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    #status-banner.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    #status-banner.error {
+      display: block;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="hub-header">
+    <div>
+      <div class="brand-title">
+        <span>🐙</span>
+        <span>GitHub App Hub & Multi-App Host</span>
+      </div>
+      <div class="brand-subtitle">
+        Pull, host, and launch internal tools, static apps, and microservices directly on Raspberry Pi 5
+      </div>
+    </div>
+    <button class="action-btn" onclick="loadInstalledApps()" style="padding: 0.5rem 1rem; font-size: 0.82rem;">
+      🔄 Refresh App List
+    </button>
+  </header>
+
+  <!-- Status Notification -->
+  <div id="status-banner"></div>
+
+  <!-- Main Grid: Clone Form + Installed Apps List -->
+  <div class="hub-grid">
+
+    <!-- Left Panel: Clone & Install Form -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>⬇️ Clone & Register GitHub Application</span>
+      </div>
+
+      <form id="clone-form" onsubmit="handleCloneSubmit(event)">
+        <div class="form-group">
+          <label class="form-label">GitHub Repository URL</label>
+          <input type="url" id="repo-url" class="form-input" placeholder="https://github.com/owner/repository" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div class="form-group">
+            <label class="form-label">App Title (Display Name)</label>
+            <input type="text" id="app-name" class="form-input" placeholder="My Awesome Dashboard">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select id="app-category" class="form-select">
+              <option value="Energy">Energy</option>
+              <option value="Outdoor">Outdoor</option>
+              <option value="Climate">Climate</option>
+              <option value="System">System</option>
+              <option value="Media">Media</option>
+              <option value="Custom" selected>Custom</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Choose App Icon</label>
+          <div class="icon-picker-wrap" id="icon-picker">
+            <div class="icon-choice selected" onclick="selectIcon(this, '📦')">📦</div>
+            <div class="icon-choice" onclick="selectIcon(this, '⚡')">⚡</div>
+            <div class="icon-choice" onclick="selectIcon(this, '🏊')">🏊</div>
+            <div class="icon-choice" onclick="selectIcon(this, '♨️')">♨️</div>
+            <div class="icon-choice" onclick="selectIcon(this, '💡')">💡</div>
+            <div class="icon-choice" onclick="selectIcon(this, '🛡️')">🛡️</div>
+            <div class="icon-choice" onclick="selectIcon(this, '📊')">📊</div>
+            <div class="icon-choice" onclick="selectIcon(this, '🚀')">🚀</div>
+            <div class="icon-choice" onclick="selectIcon(this, '🤖')">🤖</div>
+            <div class="icon-choice" onclick="selectIcon(this, '🌿')">🌿</div>
+            <div class="icon-choice" onclick="selectIcon(this, '🖥️')">🖥️</div>
+            <div class="icon-choice" onclick="selectIcon(this, '🎮')">🎮</div>
+            <div class="icon-choice" onclick="selectIcon(this, '📡')">📡</div>
+          </div>
+          <input type="hidden" id="selected-icon" value="📦">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div class="form-group">
+            <label class="form-label">App Type</label>
+            <select id="app-type" class="form-select" onchange="toggleTypeInputs()">
+              <option value="static">Static Web App (HTML/JS)</option>
+              <option value="port">Local Port Microservice</option>
+              <option value="external">External Web Link</option>
+            </select>
+          </div>
+          <div class="form-group" id="port-group" style="display: none;">
+            <label class="form-label">Port Number</label>
+            <input type="number" id="app-port" class="form-input" placeholder="e.g. 3000, 8080">
+          </div>
+        </div>
+
+        <div class="form-group" id="cmd-group" style="display: none;">
+          <label class="form-label">Launch Command (Optional)</label>
+          <input type="text" id="app-cmd" class="form-input" placeholder="e.g. python server.py or npm start">
+        </div>
+
+        <button type="submit" id="btn-clone" class="btn-submit">
+          <span>🚀 Clone & Add to Desktop</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Right Panel: Installed Apps List -->
+    <div class="panel">
+      <div class="panel-title">
+        <span>📱 Active Applications on Desktop</span>
+        <span id="installed-badge" style="margin-left: auto; font-size: 0.72rem; color: var(--accent); font-weight: normal;"></span>
+      </div>
+
+      <div class="app-list" id="apps-container">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Section: Quick 1-Click App Templates -->
+  <div class="panel">
+    <div class="panel-title">
+      <span>✨ 1-Click Common Raspberry Pi Services</span>
+    </div>
+    <div class="template-grid">
+      <!-- Template 1: Home Assistant -->
+      <div class="template-card" onclick="addQuickService('Home Assistant', '🏡', 'http://localhost:8123', 'port', 8123)">
+        <div class="template-top">
+          <span style="font-size: 1.5rem;">🏡</span>
+          <div>
+            <strong style="font-size: 0.85rem;">Home Assistant</strong>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">Port 8123</div>
+          </div>
+        </div>
+        <div class="template-desc">Integrate full home automation hub onto your desktop window.</div>
+        <button class="action-btn" style="width: 100%;">+ Pin to Desktop</button>
+      </div>
+
+      <!-- Template 2: Portainer -->
+      <div class="template-card" onclick="addQuickService('Portainer Docker', '🐳', 'http://localhost:9000', 'port', 9000)">
+        <div class="template-top">
+          <span style="font-size: 1.5rem;">🐳</span>
+          <div>
+            <strong style="font-size: 0.85rem;">Portainer Docker</strong>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">Port 9000</div>
+          </div>
+        </div>
+        <div class="template-desc">Manage containers, images, and stacks on the Pi 5.</div>
+        <button class="action-btn" style="width: 100%;">+ Pin to Desktop</button>
+      </div>
+
+      <!-- Template 3: Grafana -->
+      <div class="template-card" onclick="addQuickService('Grafana Analytics', '📊', 'http://localhost:3000', 'port', 3000)">
+        <div class="template-top">
+          <span style="font-size: 1.5rem;">📊</span>
+          <div>
+            <strong style="font-size: 0.85rem;">Grafana Dashboards</strong>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">Port 3000</div>
+          </div>
+        </div>
+        <div class="template-desc">Visualize long-term inverter energy and temperature curves.</div>
+        <button class="action-btn" style="width: 100%;">+ Pin to Desktop</button>
+      </div>
+
+      <!-- Template 4: Node-RED -->
+      <div class="template-card" onclick="addQuickService('Node-RED Flows', '🔴', 'http://localhost:1880', 'port', 1880)">
+        <div class="template-top">
+          <span style="font-size: 1.5rem;">🔴</span>
+          <div>
+            <strong style="font-size: 0.85rem;">Node-RED</strong>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">Port 1880</div>
+          </div>
+        </div>
+        <div class="template-desc">Visual event-driven wiring for home sensors and switches.</div>
+        <button class="action-btn" style="width: 100%;">+ Pin to Desktop</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let installedApps = [];
+
+    function selectIcon(el, icon) {
+      document.querySelectorAll('.icon-choice').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('selected-icon').value = icon;
+    }
+
+    function toggleTypeInputs() {
+      const type = document.getElementById('app-type').value;
+      const portGroup = document.getElementById('port-group');
+      const cmdGroup = document.getElementById('cmd-group');
+      if (type === 'port') {
+        portGroup.style.display = 'block';
+        cmdGroup.style.display = 'block';
+      } else {
+        portGroup.style.display = 'none';
+        cmdGroup.style.display = 'none';
+      }
+    }
+
+    function showStatus(msg, isSuccess = true) {
+      const banner = document.getElementById('status-banner');
+      banner.innerText = msg;
+      banner.className = isSuccess ? 'success' : 'error';
+      setTimeout(() => { banner.style.display = 'none'; }, 6000);
+    }
+
+    async function loadInstalledApps() {
+      try {
+        const res = await fetch('/api/apps');
+        const data = await res.json();
+        installedApps = data.apps || [];
+        renderAppsList();
+      } catch (err) {
+        showStatus('Failed to fetch apps: ' + err.message, false);
+      }
+    }
+
+    function renderAppsList() {
+      const container = document.getElementById('apps-container');
+      container.innerHTML = '';
+      document.getElementById('installed-badge').innerText = `${installedApps.length} Apps Registered`;
+
+      installedApps.forEach(app => {
+        const card = document.createElement('div');
+        card.className = 'app-card';
+
+        const isSys = app.is_system;
+        const isRunning = app.is_running;
+
+        card.innerHTML = `
+          <div class="app-info-group">
+            <div class="app-card-icon">${app.icon || '📦'}</div>
+            <div>
+              <div class="app-card-name">${app.name}</div>
+              <div class="app-card-sub">${app.category || 'App'} • ${app.type || 'internal'} ${isRunning ? '<span style="color:#34d399">● Running</span>' : ''}</div>
+            </div>
+          </div>
+          <div class="app-card-actions">
+            <button class="action-btn" onclick="openOnDesktop('${app.id}')" title="Launch Window">Launch</button>
+            ${!isSys && app.repo_url ? `<button class="action-btn" onclick="pullApp('${app.id}')" title="git pull">Pull</button>` : ''}
+            ${!isSys ? `<button class="action-btn btn-delete" onclick="deleteApp('${app.id}')" title="Remove App">Delete</button>` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openOnDesktop(appId) {
+      if (window.parent && window.parent.launchApp) {
+        window.parent.launchApp(appId);
+      } else {
+        window.open(`/energy`, '_blank');
+      }
+    }
+
+    async function handleCloneSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-clone');
+      btn.disabled = true;
+      btn.innerText = '⏳ Cloning Repository...';
+
+      const repoUrl = document.getElementById('repo-url').value;
+      const name = document.getElementById('app-name').value;
+      const category = document.getElementById('app-category').value;
+      const icon = document.getElementById('selected-icon').value;
+      const type = document.getElementById('app-type').value;
+      const portVal = document.getElementById('app-port').value;
+      const port = portVal ? parseInt(portVal) : null;
+      const startCmd = document.getElementById('app-cmd').value;
+
+      try {
+        const res = await fetch('/api/apps/clone', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            repo_url: repoUrl,
+            name: name,
+            category: category,
+            icon: icon,
+            type: type,
+            port: port,
+            start_cmd: startCmd
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Clone failed');
+
+        showStatus(`Successfully installed "${data.app.name}" to Desktop!`, true);
+        document.getElementById('clone-form').reset();
+        await loadInstalledApps();
+
+        // Notify parent desktop if present
+        if (window.parent && window.parent.loadApps) {
+          window.parent.loadApps();
+        }
+      } catch (err) {
+        showStatus('Error: ' + err.message, false);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '🚀 Clone & Add to Desktop';
+      }
+    }
+
+    async function pullApp(appId) {
+      try {
+        const res = await fetch(`/api/apps/${appId}/pull`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showStatus(`Git pull complete: ${data.output.slice(0, 100)}`, true);
+        } else {
+          showStatus(`Pull notice: ${data.output.slice(0, 100)}`, false);
+        }
+      } catch (err) {
+        showStatus('Pull failed: ' + err.message, false);
+      }
+    }
+
+    async function deleteApp(appId) {
+      if (!confirm(`Are you sure you want to remove this application from the desktop?`)) return;
+      try {
+        const res = await fetch(`/api/apps/${appId}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Delete failed');
+        showStatus('App uninstalled successfully.', true);
+        await loadInstalledApps();
+        if (window.parent && window.parent.loadApps) {
+          window.parent.loadApps();
+        }
+      } catch (err) {
+        showStatus('Failed to delete: ' + err.message, false);
+      }
+    }
+
+    async function addQuickService(name, icon, url, type, port) {
+      try {
+        const res = await fetch('/api/apps/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            icon: icon,
+            url: url,
+            type: type,
+            port: port,
+            category: 'Services',
+            description: `Quick shortcut for ${name}`
+          })
+        });
+        if (!res.ok) throw new Error('Failed to register service');
+        showStatus(`Added "${name}" shortcut to Desktop!`, true);
+        await loadInstalledApps();
+        if (window.parent && window.parent.loadApps) {
+          window.parent.loadApps();
+        }
+      } catch (err) {
+        showStatus('Error: ' + err.message, false);
+      }
+    }
+
+    window.onload = loadInstalledApps;
+  </script>
+</body>
+</html>

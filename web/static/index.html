@@ -31,14 +31,84 @@
       padding: 0;
     }
 
+    html {
+      overflow-y: auto !important;
+      height: auto !important;
+      touch-action: pan-y !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+
     body {
       background-color: var(--bg);
       color: var(--text);
       font-family: 'Plus Jakarta Sans', sans-serif;
       min-height: 100vh;
+      height: auto !important;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
+      overflow-y: auto !important;
+      touch-action: pan-y !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+
+    main {
+      touch-action: pan-y !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* High-contrast touch scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.4);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.28);
+      border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.65);
+    }
+
+    /* Floating Touch Quick-Scroll Pad */
+    .floating-scroll-pad {
+      position: fixed;
+      right: 14px;
+      bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 999;
+      opacity: 0.85;
+      transition: opacity 0.2s;
+    }
+    .floating-scroll-pad:hover {
+      opacity: 1;
+    }
+    .scroll-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      background: rgba(15, 23, 42, 0.88);
+      color: #38bdf8;
+      font-size: 1.15rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      touch-action: manipulation;
+      backdrop-filter: blur(8px);
+    }
+    .scroll-btn:active {
+      background: #38bdf8;
+      color: #0b111e;
+      transform: scale(0.92);
     }
 
     header {
@@ -604,10 +674,13 @@
         <div class="brand-subtitle">SunSynk 8kW + Sonoff Wi-Fi Controller + Pool Filter Control</div>
       </div>
     </div>
-    <div style="display: flex; align-items: center; gap: 0.75rem;">
-      <a href="/" title="Back to Master Home Portal" style="text-decoration: none; display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 20px; color: #38bdf8; font-size: 0.8rem; font-weight: 700; transition: all 0.2s;" onmouseover="this.style.background='rgba(56, 189, 248, 0.25)';" onmouseout="this.style.background='rgba(56, 189, 248, 0.12)';">
-        🏠 Home Portal
-      </a>
+    <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+      <button onclick="navigateToDesktop()" title="Return to Desktop Workspace" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; background: rgba(56, 189, 248, 0.16); border: 1px solid rgba(56, 189, 248, 0.45); border-radius: 20px; color: #38bdf8; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(56, 189, 248, 0.3)';" onmouseout="this.style.background='rgba(56, 189, 248, 0.16)';">
+        ⊞ Desktop
+      </button>
+      <button onclick="navigateToAppHub()" title="Open GitHub App Hub & Switch Applications" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; background: rgba(139, 92, 246, 0.16); border: 1px solid rgba(139, 92, 246, 0.45); border-radius: 20px; color: #a78bfa; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.3)';" onmouseout="this.style.background='rgba(139, 92, 246, 0.16)';">
+        🐙 App Hub
+      </button>
       <button onclick="reloadConfig()" title="Reload config.yaml without restarting the server" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; background: rgba(255, 255, 255, 0.07); border: 1px solid var(--border); border-radius: 20px; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.07)'; this.style.color='var(--text-muted)';">
         🔄 Reload Config
       </button>
@@ -1749,6 +1822,46 @@
       }
     });
 
+    // Desktop Navigation Helpers
+    function navigateToDesktop() {
+      if (window.parent && window.parent !== window && window.parent.minimizeWindow) {
+        window.parent.minimizeWindow('energy');
+      } else {
+        window.top.location.href = '/';
+      }
+    }
+
+    function navigateToAppHub() {
+      if (window.parent && window.parent !== window && window.parent.launchApp) {
+        window.parent.launchApp('github_hub');
+      } else {
+        window.top.location.href = '/apps/hub';
+      }
+    }
+
+    // Kinetic Touch Drag Scroll Helper for Pi Touchscreen
+    let touchStartY = 0;
+    let isTouching = false;
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        touchStartY = e.touches[0].clientY;
+        isTouching = true;
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!isTouching || e.touches.length !== 1) return;
+      if (e.target.closest('input, select, button, .switch-btn, canvas')) return;
+      const currentY = e.touches[0].clientY;
+      const deltaY = touchStartY - currentY;
+      window.scrollBy({ top: deltaY, behavior: 'auto' });
+      touchStartY = currentY;
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+      isTouching = false;
+    }, { passive: true });
+
     window.onload = async () => {
       await initCharts();
       await loadSystemMode();
@@ -1759,5 +1872,11 @@
       setInterval(updateCharts, 6000);
     };
   </script>
+
+  <!-- Floating Touch Quick-Scroll Pad -->
+  <div class="floating-scroll-pad">
+    <button class="scroll-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Scroll to Top">▲</button>
+    <button class="scroll-btn" onclick="window.scrollBy({top: 450, behavior: 'smooth'})" title="Scroll Down">▼</button>
+  </div>
 </body>
 </html>

@@ -3,7 +3,7 @@ FastAPI Server for Home Energy Management.
 Serves REST API, live telemetry, and web dashboard.
 """
 
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
@@ -116,13 +116,127 @@ async def reload_config_endpoint():
     await engine.reload_config(new_cfg)
     return {"success": True, "message": "Configuration reloaded successfully"}
 
-# Serve Master Portal & Energy Apps
+# -------------------------------------------------------------
+# Apps & GitHub Management APIs
+# -------------------------------------------------------------
+from core.apps_manager import AppsManager, APPS_DIR
+apps_mgr = AppsManager()
+
+# Ensure APPS_DIR exists and mount it for hosted static apps
+APPS_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/apps/hosted", StaticFiles(directory=APPS_DIR), name="hosted_apps")
+
+@app.get("/api/apps")
+async def list_apps():
+    return {"apps": apps_mgr.get_apps()}
+
+@app.post("/api/apps/register")
+async def register_app_endpoint(payload: Dict[str, Any] = Body(...)):
+    app_meta = apps_mgr.register_app(payload)
+    return {"success": True, "app": app_meta}
+
+@app.delete("/api/apps/{app_id}")
+async def delete_app_endpoint(app_id: str):
+    try:
+        ok = await apps_mgr.delete_app(app_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail="App not found")
+        return {"success": True, "id": app_id}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/apps/clone")
+async def clone_github_endpoint(payload: Dict[str, Any] = Body(...)):
+    repo_url = payload.get("repo_url")
+    if not repo_url:
+        raise HTTPException(status_code=400, detail="Repository URL is required")
+    name = payload.get("name")
+    icon = payload.get("icon", "📦")
+    category = payload.get("category", "Custom")
+    port = payload.get("port")
+    start_cmd = payload.get("start_cmd")
+    app_type = payload.get("type")
+
+    try:
+        app_meta = await apps_mgr.clone_github_repo(
+            repo_url=repo_url,
+            name=name,
+            icon=icon,
+            category=category,
+            port=port,
+            start_cmd=start_cmd,
+            app_type=app_type
+        )
+        return {"success": True, "app": app_meta}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to clone GitHub repo: {str(e)}")
+
+@app.post("/api/apps/{app_id}/pull")
+async def pull_app_endpoint(app_id: str):
+    try:
+        res = await apps_mgr.pull_repo(app_id)
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/apps/{app_id}/start")
+async def start_app_endpoint(app_id: str):
+    ok = await apps_mgr.start_app_process(app_id)
+    return {"success": ok}
+
+@app.post("/api/apps/{app_id}/stop")
+async def stop_app_endpoint(app_id: str):
+    ok = await apps_mgr.stop_app_process(app_id)
+    return {"success": ok}
+
+@app.get("/api/system/metrics")
+async def system_metrics():
+    return apps_mgr.get_system_metrics()
+
+# Reverse proxy for microservices running on local ports (e.g. /proxy/3000/...)
+@app.api_route("/proxy/{port}/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+async def reverse_proxy(port: int, path: str, request: Request):
+    import aiohttp
+    url = f"http://127.0.0.1:{port}/{path}"
+    headers = {k: v for k, v in request.headers.items() if k.lower() not in ("host", "content-length")}
+    params = dict(request.query_params)
+    body = await request.body()
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.request(
+                method=request.method,
+                url=url,
+                headers=headers,
+                params=params,
+                data=body,
+                allow_redirects=True,
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as upstream:
+                content = await upstream.read()
+                resp_headers = {k: v for k, v in upstream.headers.items() if k.lower() not in ("transfer-encoding", "content-encoding")}
+                return Response(content=content, status_code=upstream.status, headers=resp_headers)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Proxy error connecting to port {port}: {str(e)}")
+
+# -------------------------------------------------------------
+# Desktop & Application UI Routes
+# -------------------------------------------------------------
 @app.get("/")
-async def portal_root():
-    return FileResponse(STATIC_DIR / "portal.html")
+async def desktop_root():
+    return FileResponse(STATIC_DIR / "desktop.html")
+
+@app.get("/desktop")
+async def desktop_page():
+    return FileResponse(STATIC_DIR / "desktop.html")
 
 @app.get("/portal")
 async def portal_page():
+    return FileResponse(STATIC_DIR / "desktop.html")
+
+@app.get("/portal-classic")
+async def portal_classic():
     return FileResponse(STATIC_DIR / "portal.html")
 
 @app.get("/energy")
@@ -132,5 +246,13 @@ async def energy_dashboard():
 @app.get("/dashboard")
 async def dashboard_alias():
     return FileResponse(STATIC_DIR / "index.html")
+
+@app.get("/apps/hub")
+async def github_hub_page():
+    return FileResponse(STATIC_DIR / "github_hub.html")
+
+@app.get("/apps/system")
+async def system_diag_page():
+    return FileResponse(STATIC_DIR / "system_diag.html")
 
 app.mount("/", StaticFiles(directory=STATIC_DIR), name="static")

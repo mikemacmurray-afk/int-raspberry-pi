@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CrPi5 Edge Diagnostics • Cranleigh OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090e1a;
+      --card-bg: rgba(18, 26, 46, 0.82);
+      --border: rgba(255, 255, 255, 0.09);
+      --border-glow: rgba(56, 189, 248, 0.35);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding: 1.25rem;
+      overflow-y: auto;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .diag-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.15rem;
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .metric-progress {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .metric-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.85rem;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .info-table td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .info-table td:first-child {
+      color: var(--text-muted);
+      width: 200px;
+      font-weight: 600;
+    }
+
+    .info-table td:last-child {
+      font-family: 'JetBrains Mono', monospace;
+      color: #f1f5f9;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.06);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="diag-header">
+    <div>
+      <h2 style="font-size: 1.3rem; font-weight: 800;">🖥️ CrPi5 Hardware & Diagnostics</h2>
+      <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+        Real-time telemetry from Raspberry Pi 5 quad-core ARM Cortex-A76 node
+      </div>
+    </div>
+    <button class="btn" onclick="fetchMetrics()">🔄 Refresh Metrics</button>
+  </header>
+
+  <!-- Metrics Grid -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-label">🌡️ SoC Thermal Sensor</div>
+      <div class="metric-val" id="val-temp" style="color: #38bdf8;">--°C</div>
+      <div class="metric-progress">
+        <div class="metric-fill" id="fill-temp" style="width: 40%; background: #38bdf8;"></div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">⚡ Quad-Core CPU Load</div>
+      <div class="metric-val" id="val-cpu" style="color: #f59e0b;">-- %</div>
+      <div class="metric-progress">
+        <div class="metric-fill" id="fill-cpu" style="width: 15%; background: #f59e0b;"></div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">🧠 LPDDR4X Memory</div>
+      <div class="metric-val" id="val-ram" style="color: #10b981;">-- %</div>
+      <div class="metric-progress">
+        <div class="metric-fill" id="fill-ram" style="width: 25%; background: #10b981;"></div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">💾 NVMe / Storage</div>
+      <div class="metric-val" id="val-disk" style="color: #a855f7;">-- %</div>
+      <div class="metric-progress">
+        <div class="metric-fill" id="fill-disk" style="width: 30%; background: #a855f7;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hardware Details Table -->
+  <div class="section-card">
+    <div class="section-title">
+      <span>⚙️ Edge Node Specifications</span>
+    </div>
+    <table class="info-table">
+      <tr>
+        <td>Device Hostname</td>
+        <td id="spec-host">CrPi5</td>
+      </tr>
+      <tr>
+        <td>Local LAN IP Address</td>
+        <td id="spec-ip">192.168.3.169</td>
+      </tr>
+      <tr>
+        <td>Memory Utilization</td>
+        <td id="spec-ram-detail">-- MB / -- MB</td>
+      </tr>
+      <tr>
+        <td>Display Output</td>
+        <td>DSI-2 720x1280 (1280x720 Landscape Mode)</td>
+      </tr>
+      <tr>
+        <td>Edge Conductor Service</td>
+        <td><span style="color: #34d399; font-weight: 700;">● Active (home-conductor.service)</span></td>
+      </tr>
+      <tr>
+        <td>System Uptime</td>
+        <td id="spec-uptime">-- hours</td>
+      </tr>
+    </table>
+  </div>
+
+  <div style="display: flex; gap: 0.75rem;">
+    <button class="btn" onclick="reloadConductor()">🔄 Reload Conductor Config</button>
+  </div>
+
+  <script>
+    async function fetchMetrics() {
+      try {
+        const res = await fetch('/api/system/metrics');
+        if (!res.ok) return;
+        const m = await res.json();
+
+        // Temp
+        const temp = m.temp_c || 43.5;
+        document.getElementById('val-temp').innerText = `${temp}°C`;
+        const tempPct = Math.min(100, Math.max(10, (temp / 85) * 100));
+        document.getElementById('fill-temp').style.width = `${tempPct}%`;
+
+        // CPU
+        const cpu = m.cpu_percent || 0;
+        document.getElementById('val-cpu').innerText = `${cpu}%`;
+        document.getElementById('fill-cpu').style.width = `${cpu}%`;
+
+        // RAM
+        const ram = m.ram_percent || 0;
+        document.getElementById('val-ram').innerText = `${ram}%`;
+        document.getElementById('fill-ram').style.width = `${ram}%`;
+        document.getElementById('spec-ram-detail').innerText = `${m.ram_used_mb} MB / ${m.ram_total_mb} MB (${ram}%)`;
+
+        // Disk
+        const disk = m.disk_percent || 0;
+        document.getElementById('val-disk').innerText = `${disk}%`;
+        document.getElementById('fill-disk').style.width = `${disk}%`;
+
+        // Host / IP
+        document.getElementById('spec-host').innerText = m.hostname;
+        document.getElementById('spec-ip').innerText = m.ip_address;
+
+        // Uptime
+        const upHours = (m.uptime_seconds / 3600).toFixed(1);
+        document.getElementById('spec-uptime').innerText = `${upHours} hours`;
+      } catch (err) {
+        console.warn('Error fetching metrics:', err);
+      }
+    }
+
+    async function reloadConductor() {
+      try {
+        const res = await fetch('/api/reload', { method: 'POST' });
+        const d = await res.json();
+        alert('Reloaded: ' + (d.message || 'OK'));
+      } catch (e) {
+        alert('Reload failed: ' + e.message);
+      }
+    }
+
+    window.onload = () => {
+      fetchMetrics();
+      setInterval(fetchMetrics, 4000);
+    };
+  </script>
+</body>
+</html>
