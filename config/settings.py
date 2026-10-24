@@ -65,6 +65,13 @@ class SystemConfig(BaseModel):
     poll_interval_sec: float = 3.0
     db_path: str = "data/energy_history.db"
 
+class FamilyRelayConfig(BaseModel):
+    enabled: bool = True
+    url: str = "https://learnai.betterfreelife.com/family-relay"
+    secret: str = "cranleigh_family_relay_2026"
+    local_actor: str = "grandparents"
+    sync_interval_sec: int = 15
+
 class AppConfig(BaseModel):
     system: SystemConfig = Field(default_factory=SystemConfig)
     sunsynk: SunsynkConfig = Field(default_factory=SunsynkConfig)
@@ -74,6 +81,7 @@ class AppConfig(BaseModel):
     sonoff_geyser_backup: SonoffDeviceConfig = Field(default_factory=lambda: SonoffDeviceConfig(name="Geyser Backup DB Switch", rated_watts=3000))
     rainpoint: RainPointConfig = Field(default_factory=RainPointConfig)
     web: WebConfig = Field(default_factory=WebConfig)
+    family_relay: FamilyRelayConfig = Field(default_factory=FamilyRelayConfig)
 
 def load_config(path: Optional[str] = None) -> AppConfig:
     config_file = Path(path) if path else DEFAULT_CONFIG_PATH

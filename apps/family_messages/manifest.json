@@ -1,0 +1,13 @@
+{
+  "id": "family_messages",
+  "name": "Family Messages",
+  "icon": "💬",
+  "category": "Family",
+  "type": "static",
+  "url": "/apps/hosted/family_messages/index.html",
+  "description": "Direct family messaging connection between Grandparents and Kids' Pod",
+  "default_maximized": false,
+  "is_system": false,
+  "width": 980,
+  "height": 640
+}

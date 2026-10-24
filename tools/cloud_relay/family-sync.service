@@ -1,0 +1,14 @@
+[Unit]
+Description=Family Messages Cloud Relay Sync Bridge
+After=network.target
+
+[Service]
+Type=simple
+User=al
+WorkingDirectory=/home/al/family-pod
+ExecStart=/usr/bin/python3 /home/al/family-pod/app/scripts/pi/pidash_sync_agent.py --interval 15
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

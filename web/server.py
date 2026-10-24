@@ -10,18 +10,45 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from contextlib import asynccontextmanager
 
+import asyncio
 from config.settings import load_config
 from core.engine import CoreEngine
+from core.messages_manager import MessagesManager
 
 config = load_config()
 engine = CoreEngine(config)
 
+# Family Messaging Manager & Cloud Relay Config
+relay_cfg = getattr(config, "family_relay", None)
+RELAY_ENABLED = relay_cfg.enabled if relay_cfg else True
+RELAY_URL = relay_cfg.url if relay_cfg else "https://learnai.betterfreelife.com/family-relay"
+RELAY_SECRET = relay_cfg.secret if relay_cfg else "cranleigh_family_relay_2026"
+LOCAL_ACTOR = relay_cfg.local_actor if relay_cfg else "grandparents"
+SYNC_INTERVAL = int(relay_cfg.sync_interval_sec) if relay_cfg else 15
+
+messages_mgr = MessagesManager(local_actor=LOCAL_ACTOR)
+
+async def _family_relay_sync_loop():
+    """Background loop that synchronizes messages with the Hetzner cloud relay."""
+    if not RELAY_ENABLED or not RELAY_URL:
+        return
+    # Initial pause to let server startup complete
+    await asyncio.sleep(3)
+    while True:
+        try:
+            await messages_mgr.sync_with_relay(RELAY_URL, RELAY_SECRET)
+        except Exception:
+            pass
+        await asyncio.sleep(SYNC_INTERVAL)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Start polling loop
+    # Startup: Start polling loops
     await engine.start()
+    sync_task = asyncio.create_task(_family_relay_sync_loop())
     yield
     # Shutdown: Stop polling loop
+    sync_task.cancel()
     await engine.stop()
 
 app = FastAPI(title="Pi 5 Home Energy Management", lifespan=lifespan)
@@ -254,5 +281,55 @@ async def github_hub_page():
 @app.get("/apps/system")
 async def system_diag_page():
     return FileResponse(STATIC_DIR / "system_diag.html")
+
+# -------------------------------------------------------------
+# Family Messages APIs
+# -------------------------------------------------------------
+@app.get("/api/family/state")
+async def get_family_state(peer: Optional[str] = None):
+    return {
+        "actor": messages_mgr.local_actor,
+        "profiles": messages_mgr.get_profiles(),
+        "messages": messages_mgr.get_messages(peer=peer),
+        "unread": messages_mgr.get_unread_counts()
+    }
+
+@app.post("/api/family/messages")
+async def send_family_message(payload: Dict[str, Any] = Body(...)):
+    recipient = payload.get("recipient")
+    body = payload.get("body")
+    msg_id = payload.get("id")
+    if not recipient or not body:
+        raise HTTPException(status_code=400, detail="Missing recipient or body")
+    try:
+        msg = messages_mgr.send_message(recipient=recipient, body=body, msg_id=msg_id)
+        # Immediately trigger background sync so the message hits the cloud relay right away
+        if RELAY_ENABLED and RELAY_URL:
+            asyncio.create_task(messages_mgr.sync_with_relay(RELAY_URL, RELAY_SECRET))
+        return {"success": True, "message": msg}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.patch("/api/family/messages/read")
+async def mark_family_messages_read(payload: Dict[str, Any] = Body(...)):
+    sender = payload.get("sender")
+    if not sender:
+        raise HTTPException(status_code=400, detail="Missing sender")
+    count = messages_mgr.mark_read(sender)
+    if RELAY_ENABLED and RELAY_URL:
+        asyncio.create_task(messages_mgr.sync_with_relay(RELAY_URL, RELAY_SECRET))
+    return {"success": True, "read_count": count}
+
+@app.get("/api/family/unread")
+async def get_family_unread():
+    return {"unread": messages_mgr.get_unread_counts()}
+
+@app.post("/api/family/sync")
+async def trigger_family_sync():
+    """Manually trigger immediate bidirectional sync with cloud relay."""
+    if not RELAY_ENABLED or not RELAY_URL:
+        return {"synced": False, "reason": "Relay disabled"}
+    res = await messages_mgr.sync_with_relay(RELAY_URL, RELAY_SECRET)
+    return res
 
 app.mount("/", StaticFiles(directory=STATIC_DIR), name="static")

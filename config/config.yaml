@@ -77,3 +77,11 @@ rainpoint:
 web:
   host: "0.0.0.0"
   port: 8050
+
+# Family Messaging & Cloud Relay Bridge
+family_relay:
+  enabled: true
+  url: "https://learnai.betterfreelife.com/family-relay"
+  secret: "cranleigh_family_relay_2026"
+  local_actor: "grandparents"
+  sync_interval_sec: 15

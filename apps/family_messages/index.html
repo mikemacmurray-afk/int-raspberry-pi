@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Family Messages • Cranleigh OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #131c31;
+      --surface-elevated: #1a2642;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(56, 189, 248, 0.4);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --pink: #ec4899;
+      --emerald: #10b981;
+      --bubble-mine: linear-gradient(135deg, #0284c7, #02598b);
+      --bubble-theirs: rgba(30, 41, 59, 0.85);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      user-select: none;
+    }
+
+    .app-layout {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Contacts Sidebar (Left) */
+    .contacts-sidebar {
+      width: 290px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 1.1rem 1.25rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sidebar-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .relay-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .contacts-list {
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex-grow: 1;
+      overflow-y: auto;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.75rem 0.85rem;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+      text-align: left;
+      width: 100%;
+    }
+
+    .contact-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .contact-item.active {
+      background: var(--surface-elevated);
+      border-color: var(--border-focus);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .contact-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: #ffffff;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .avatar-kids {
+      background: linear-gradient(135deg, #ec4899, #be185d);
+    }
+
+    .avatar-grandparents {
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+    }
+
+    .avatar-parents {
+      background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .contact-info {
+      flex-grow: 1;
+      overflow: hidden;
+    }
+
+    .contact-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .contact-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .unread-pill {
+      background: #ec4899;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.6);
+      animation: bounce 0.3s ease;
+    }
+
+    @keyframes bounce {
+      0% { transform: scale(0.6); }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
+    .sidebar-footer {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border);
+      background: rgba(10, 16, 28, 0.6);
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* Main Conversation Panel (Right) */
+    .conversation-panel {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 85% 15%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 15% 85%, rgba(236, 72, 153, 0.04) 0%, transparent 40%),
+        var(--bg);
+      overflow: hidden;
+    }
+
+    /* Conversation Header */
+    .chat-header {
+      height: 64px;
+      padding: 0 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(19, 28, 49, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .chat-header-profile {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .chat-header-name {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .chat-header-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .heart-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      background: rgba(236, 72, 153, 0.12);
+      color: #ec4899;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      touch-action: manipulation;
+    }
+
+    .heart-btn:hover {
+      background: rgba(236, 72, 153, 0.25);
+      transform: scale(1.1);
+      box-shadow: 0 0 16px rgba(236, 72, 153, 0.5);
+    }
+
+    .heart-btn:active {
+      transform: scale(0.9);
+    }
+
+    /* Messages Stream */
+    .chat-messages {
+      flex-grow: 1;
+      padding: 1.25rem 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .message-row {
+      display: flex;
+      flex-direction: column;
+      max-width: 72%;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message-row.mine {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .message-row.theirs {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+
+    .message-bubble {
+      padding: 0.85rem 1.15rem;
+      border-radius: 18px;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      word-break: break-word;
+      user-select: text;
+    }
+
+    .message-row.mine .message-bubble {
+      background: var(--bubble-mine);
+      border-bottom-right-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .message-row.theirs .message-bubble {
+      background: var(--bubble-theirs);
+      border-bottom-left-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .message-meta {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 4px;
+    }
+
+    /* Quick Hello Chips */
+    .quick-bar {
+      padding: 0.6rem 1.25rem 0.3rem;
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      touch-action: pan-x;
+      -webkit-overflow-scrolling: touch;
+      flex-shrink: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .chip-btn {
+      padding: 0.4rem 0.85rem;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      touch-action: manipulation;
+    }
+
+    .chip-btn:hover {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: var(--accent);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .chip-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Composer Area */
+    .chat-composer {
+      padding: 0.75rem 1.25rem 1rem;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .composer-input {
+      flex-grow: 1;
+      height: 48px;
+      background: rgba(10, 16, 28, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 0 1.25rem;
+      color: #ffffff;
+      font-size: 0.92rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .composer-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+    }
+
+    .send-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #0284c7, #06b6d4);
+      color: #ffffff;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      touch-action: manipulation;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+    }
+
+    .send-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.55);
+    }
+
+    .send-btn:active {
+      transform: scale(0.95);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Empty state */
+    .empty-state {
+      margin: auto;
+      text-align: center;
+      max-width: 320px;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 2rem 1rem;
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Floating Heart Shower Animation */
+    .floating-heart {
+      position: fixed;
+      font-size: 2rem;
+      pointer-events: none;
+      animation: floatUp 1.8s forwards ease-out;
+      z-index: 9999;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(0.5); }
+      50% { transform: translateY(-80px) scale(1.3); }
+      100% { opacity: 0; transform: translateY(-160px) scale(1); }
+    }
+
+    /* Scrollbars touch */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-layout">
+    
+    <!-- Contacts Sidebar -->
+    <aside class="contacts-sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-title">YOUR PEOPLE</span>
+        <div class="relay-badge" id="relay-status-badge">
+          <span>●</span>
+          <span id="relay-label">Local Pod</span>
+        </div>
+      </div>
+
+      <div class="contacts-list" id="contacts-list">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="sidebar-footer">
+        <span style="font-size: 1.3rem;">❤️</span>
+        <span>Sometimes a little hello makes someone's whole day.</span>
+      </div>
+    </aside>
+
+    <!-- Conversation Panel -->
+    <main class="conversation-panel">
+      
+      <!-- Chat Header -->
+      <header class="chat-header">
+        <div class="chat-header-profile">
+          <div class="contact-avatar" id="header-avatar">K</div>
+          <div>
+            <div class="chat-header-name" id="header-name">Kids & Grandchildren</div>
+            <div class="chat-header-desc" id="header-desc">From Grandparents • family messages</div>
+          </div>
+        </div>
+
+        <button class="heart-btn" onclick="sendHeartBurst(event)" title="Send Love!">
+          ❤️
+        </button>
+      </header>
+
+      <!-- Messages Stream -->
+      <div class="chat-messages" id="messages-container">
+        <!-- Messages rendered dynamically -->
+      </div>
+
+      <!-- Quick Message Chips -->
+      <div class="quick-bar">
+        <button class="chip-btn" onclick="sendQuickMessage('Hello! 👋')">Hello! 👋</button>
+        <button class="chip-btn" onclick="sendQuickMessage('We love you ❤️')">We love you ❤️</button>
+        <button class="chip-btn" onclick="sendQuickMessage('How was your day? 😊')">How was your day? 😊</button>
+        <button class="chip-btn" onclick="sendQuickMessage('Can we call? 📞')">Can we call? 📞</button>
+        <button class="chip-btn" onclick="sendQuickMessage('Thinking of you! ☕')">Thinking of you! ☕</button>
+        <button class="chip-btn" onclick="sendQuickMessage('Proud of you! 🌟')">Proud of you! 🌟</button>
+      </div>
+
+      <!-- Composer -->
+      <form class="chat-composer" onsubmit="handleSend(event)">
+        <input 
+          type="text" 
+          id="msg-input" 
+          class="composer-input" 
+          placeholder="Write a message to Kids & Grandchildren..." 
+          autocomplete="off"
+        >
+        <button type="submit" id="send-button" class="send-btn" title="Send Message">
+          ➤
+        </button>
+      </form>
+
+    </main>
+
+  </div>
+
+  <script>
+    let activePeer = 'kids';
+    let localActor = 'grandparents';
+    let currentProfiles = [];
+    let currentMessages = [];
+    let unreadCounts = {};
+    let isSending = false;
+
+    // Load initial state
+    async function loadState() {
+      try {
+        const res = await fetch(`/api/family/state?peer=${activePeer}`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        localActor = data.actor || 'grandparents';
+        currentProfiles = data.profiles || [];
+        unreadCounts = data.unread || {};
+
+        renderContacts();
+        renderMessages(data.messages || []);
+
+        // Mark incoming messages as read
+        if (unreadCounts[activePeer] > 0) {
+          await fetch('/api/family/messages/read', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sender: activePeer })
+          });
+        }
+      } catch (err) {
+        console.warn('Error loading family state:', err);
+      }
+    }
+
+    function renderContacts() {
+      const container = document.getElementById('contacts-list');
+      container.innerHTML = '';
+
+      const peers = currentProfiles.filter(p => p.id !== localActor);
+
+      peers.forEach(peer => {
+        const isActive = peer.id === activePeer;
+        const unread = unreadCounts[peer.id] || 0;
+
+        const btn = document.createElement('button');
+        btn.className = `contact-item ${isActive ? 'active' : ''}`;
+        btn.onclick = () => selectPeer(peer.id);
+
+        btn.innerHTML = `
+          <div class="contact-avatar avatar-${peer.id}">${peer.avatar || peer.name[0]}</div>
+          <div class="contact-info">
+            <div class="contact-name">${peer.name}</div>
+            <div class="contact-sub">${peer.subtitle || 'Family Pod'}</div>
+          </div>
+          ${unread > 0 ? `<div class="unread-pill">${unread}</div>` : ''}
+        `;
+
+        container.appendChild(btn);
+      });
+
+      // Update header
+      const recipient = currentProfiles.find(p => p.id === activePeer);
+      if (recipient) {
+        document.getElementById('header-name').innerText = recipient.name;
+        document.getElementById('header-avatar').className = `contact-avatar avatar-${recipient.id}`;
+        document.getElementById('header-avatar').innerText = recipient.avatar || recipient.name[0];
+        document.getElementById('msg-input').placeholder = `Write a message to ${recipient.name}...`;
+      }
+    }
+
+    function renderMessages(messages) {
+      const container = document.getElementById('messages-container');
+      const isAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 60;
+
+      if (!messages || messages.length === 0) {
+        const recipient = currentProfiles.find(p => p.id === activePeer);
+        const name = recipient ? recipient.name : 'your family';
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">💌</div>
+            <strong style="color: #ffffff; font-size: 1.05rem;">Start with a little hello</strong>
+            <p>Your messages to ${name} will appear here. Choose a quick hello below or write your own!</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '';
+
+      messages.forEach(msg => {
+        const isMine = msg.sender === localActor;
+        const row = document.createElement('div');
+        row.className = `message-row ${isMine ? 'mine' : 'theirs'}`;
+
+        const dateObj = new Date(msg.created_at);
+        const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const dateStr = dateObj.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+        let statusIndicator = '';
+        if (isMine) {
+          statusIndicator = msg.read_at ? ' • ✓✓ Seen' : ' • ✓✓ Sent';
+        }
+
+        row.innerHTML = `
+          <div class="message-bubble">${escapeHtml(msg.body)}</div>
+          <div class="message-meta">
+            <span>${dateStr}, ${timeStr}${statusIndicator}</span>
+          </div>
+        `;
+
+        container.appendChild(row);
+      });
+
+      // Auto-scroll to latest
+      if (isAtBottom || messages.length !== currentMessages.length) {
+        container.scrollTop = container.scrollHeight;
+      }
+      currentMessages = messages;
+    }
+
+    function selectPeer(peerId) {
+      activePeer = peerId;
+      loadState();
+    }
+
+    async function handleSend(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('msg-input');
+      const body = input.value.trim();
+      if (!body || isSending) return;
+
+      await sendMessage(body);
+      input.value = '';
+    }
+
+    async function sendQuickMessage(text) {
+      if (isSending) return;
+      await sendMessage(text);
+    }
+
+    async function sendMessage(body) {
+      isSending = true;
+      document.getElementById('send-button').disabled = true;
+
+      try {
+        const res = await fetch('/api/family/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipient: activePeer,
+            body: body
+          })
+        });
+
+        if (!res.ok) throw new Error('Send failed');
+        await loadState();
+      } catch (err) {
+        alert('Could not send message: ' + err.message);
+      } finally {
+        isSending = false;
+        document.getElementById('send-button').disabled = false;
+        document.getElementById('msg-input').focus();
+      }
+    }
+
+    function sendHeartBurst(e) {
+      // Send heart message
+      sendQuickMessage('❤️');
+
+      // Visual floating heart burst
+      const btn = e.target;
+      const rect = btn.getBoundingClientRect();
+
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          const heart = document.createElement('div');
+          heart.className = 'floating-heart';
+          heart.innerText = '❤️';
+          heart.style.left = `${rect.left + (Math.random() * 30 - 15)}px`;
+          heart.style.top = `${rect.top}px`;
+          document.body.appendChild(heart);
+          setTimeout(() => heart.remove(), 1800);
+        }, i * 120);
+      }
+    }
+
+    function escapeHtml(text) {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    window.onload = () => {
+      loadState();
+      // Poll every 3 seconds for new messages
+      setInterval(loadState, 3000);
+    };
+  </script>
+</body>
+</html>
